@@ -3,6 +3,7 @@ services:
     image: postgres:16-alpine
     container_name: teams_postgres
     restart: unless-stopped
+    command: postgres -c timezone=Asia/Kolkata
     environment:
       POSTGRES_USER: teams
       POSTGRES_PASSWORD: teams_secret

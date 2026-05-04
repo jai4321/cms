@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { DRIZZLE } from '../db/drizzle.module';
 import type { DrizzleClient } from '../db/drizzle.client';
 import { users } from '../db/schema';
@@ -33,7 +34,7 @@ export class UsersService {
   async update(id: string, data: Partial<NewUser>): Promise<User> {
     const result = await this.db
       .update(users)
-      .set({ ...data, updatedAt: new Date() })
+      .set({ ...data, updatedAt: sql`now()` })
       .where(eq(users.id, id))
       .returning();
     return result[0];

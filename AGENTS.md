@@ -5,6 +5,13 @@ The full phase-by-phase plan is in `PHASES.md` at the repo root.
 
 ---
 
+## Workflow Rules (MUST follow)
+
+1. **Backend before frontend** — When building any phase that has both backend and frontend work, complete and verify the backend fully first. Then STOP and ask the user: *"Backend is done. Shall I start the frontend?"* Do NOT begin frontend work without explicit confirmation.
+2. **One phase at a time** — Do not start the next phase until the user explicitly asks for it.
+
+---
+
 ## Project Structure
 
 ```
