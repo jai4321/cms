@@ -1,0 +1,21 @@
+CREATE TABLE "users" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"email" varchar(255) NOT NULL,
+	"username" varchar(100) NOT NULL,
+	"password_hash" varchar(255) NOT NULL,
+	"avatar_url" varchar(512),
+	"is_email_verified" boolean DEFAULT false NOT NULL,
+	"email_verification_token" varchar(255),
+	"email_verification_expiry" timestamp,
+	"refresh_token_hash" varchar(255),
+	"refresh_token_expiry" timestamp,
+	"password_reset_token" varchar(255),
+	"password_reset_expiry" timestamp,
+	"two_factor_secret" text,
+	"two_factor_enabled" boolean DEFAULT false NOT NULL,
+	"two_factor_backup_codes" jsonb,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "users_email_unique" UNIQUE("email"),
+	CONSTRAINT "users_username_unique" UNIQUE("username")
+);
