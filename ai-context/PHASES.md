@@ -5,10 +5,12 @@
 **Workspace layout:**
 ```
 cms/
+├── ai-context/
+│   └── PHASES.md
 ├── backend/      ← NestJS
 ├── frontend/     ← Next.js
 ├── docker-compose.yml
-└── PHASES.md
+└── AGENTS.md
 ```
 
 **Docker services:** postgres:16-alpine · redis:7-alpine · minio/minio · backend (NestJS) · frontend (Next.js)

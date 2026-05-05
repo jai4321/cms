@@ -1,7 +1,7 @@
 # Agent Instructions — Teams Chat System
 
 This is a Microsoft Teams-like chat application. Read this file fully before making any changes.
-The full phase-by-phase plan is in `PHASES.md` at the repo root.
+The full phase-by-phase plan is in `ai-context/PHASES.md`.
 
 ---
 
@@ -16,12 +16,18 @@ The full phase-by-phase plan is in `PHASES.md` at the repo root.
 
 ```
 cms/
+├── ai-context/       ← AI planning/context docs (PHASES, prompts, notes)
 ├── backend/          ← NestJS API server
 ├── frontend/         ← Next.js App Router client
 ├── docker-compose.yml
-├── PHASES.md         ← Full 9-phase feature plan with schemas, endpoints, packages
 └── AGENTS.md         ← This file
 ```
+
+## AI Context Convention
+
+- Keep `AGENTS.md` at repo root for maximum discoverability.
+- Keep AI planning/context files in `ai-context/` (for example `ai-context/PHASES.md`, `ai-context/prompt.md`).
+- Do not duplicate `PHASES.md` in multiple locations; `ai-context/PHASES.md` is the single source of truth.
 
 ---
 
@@ -121,7 +127,7 @@ NEXT_PUBLIC_WS_URL=http://localhost:4000
 
 ## Current Phase Status
 
-See `PHASES.md` for full details. Check the `## Current Implementation Status` section in that file for what is done and what to build next.
+See `ai-context/PHASES.md` for full details. Check the `## Current Implementation Status` section in that file for what is done and what to build next.
 
 **Ports:**
 - Backend: `4000`

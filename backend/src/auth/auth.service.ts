@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -54,7 +53,10 @@ export class AuthService {
     });
 
     await this.emailService.sendVerificationEmail(dto.email, verificationToken);
-    return { message: 'Registration successful. Check your email to verify your account.' };
+    return {
+      message:
+        'Registration successful. Check your email to verify your account.',
+    };
   }
 
   // ─── Verify Email ─────────────────────────────────────────────────────────────
@@ -62,7 +64,11 @@ export class AuthService {
   async verifyEmail(token: string): Promise<{ message: string }> {
     const user = await this.usersService.findByEmailVerificationToken(token);
 
-    if (!user || !user.emailVerificationExpiry || new Date() > user.emailVerificationExpiry) {
+    if (
+      !user ||
+      !user.emailVerificationExpiry ||
+      new Date() > user.emailVerificationExpiry
+    ) {
       throw new BadRequestException('Invalid or expired verification token');
     }
 
@@ -90,7 +96,9 @@ export class AuthService {
     if (!passwordValid) throw new UnauthorizedException('Invalid credentials');
 
     if (!user.isEmailVerified) {
-      throw new UnauthorizedException('Please verify your email before logging in');
+      throw new UnauthorizedException(
+        'Please verify your email before logging in',
+      );
     }
 
     if (user.twoFactorEnabled) {
@@ -99,12 +107,16 @@ export class AuthService {
     }
 
     const { accessToken, refreshToken } = await this.issueTokens(user);
+    console.log('Access Token:', accessToken);
+    console.log('Refresh Token:', refreshToken);
     return { accessToken, refreshToken, user: toSafeUser(user) };
   }
 
   // ─── Refresh ──────────────────────────────────────────────────────────────────
 
-  async refresh(user: User): Promise<{ accessToken: string; refreshToken: string }> {
+  async refresh(
+    user: User,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     return this.issueTokens(user);
   }
 
@@ -123,7 +135,10 @@ export class AuthService {
   async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
     const user = await this.usersService.findByEmail(dto.email);
     // Always return success to prevent email enumeration
-    if (!user) return { message: 'If that email is registered, a reset link has been sent.' };
+    if (!user)
+      return {
+        message: 'If that email is registered, a reset link has been sent.',
+      };
 
     const token = uuidv4();
     const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1h
@@ -132,7 +147,9 @@ export class AuthService {
       passwordResetExpiry: expiry,
     });
     await this.emailService.sendPasswordResetEmail(user.email, token);
-    return { message: 'If that email is registered, a reset link has been sent.' };
+    return {
+      message: 'If that email is registered, a reset link has been sent.',
+    };
   }
 
   // ─── Reset Password ───────────────────────────────────────────────────────────
@@ -140,7 +157,11 @@ export class AuthService {
   async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
     const user = await this.usersService.findByPasswordResetToken(dto.token);
 
-    if (!user || !user.passwordResetExpiry || new Date() > user.passwordResetExpiry) {
+    if (
+      !user ||
+      !user.passwordResetExpiry ||
+      new Date() > user.passwordResetExpiry
+    ) {
       throw new BadRequestException('Invalid or expired reset token');
     }
 
@@ -168,7 +189,9 @@ export class AuthService {
     );
   }
 
-  async issueTokens(user: User): Promise<{ accessToken: string; refreshToken: string }> {
+  async issueTokens(
+    user: User,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const payload = { sub: user.id, email: user.email };
 
     const accessToken = this.jwtService.sign(payload, {
@@ -179,7 +202,8 @@ export class AuthService {
     const refreshToken = crypto.randomBytes(40).toString('hex');
     const refreshTokenHash = await bcrypt.hash(refreshToken, SALT_ROUNDS);
     const refreshExpiry = new Date(
-      Date.now() + parseDuration(this.config.get('JWT_REFRESH_EXPIRES_IN', '7d')),
+      Date.now() +
+        parseDuration(this.config.get('JWT_REFRESH_EXPIRES_IN', '7d')),
     );
 
     await this.usersService.update(user.id, {

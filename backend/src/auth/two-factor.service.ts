@@ -21,7 +21,11 @@ export class TwoFactorService {
     private readonly authService: AuthService,
     private readonly config: ConfigService,
   ) {
-    const hexKey = config.getOrThrow<string>('TWO_FACTOR_ENCRYPTION_KEY');
+    const hexKey = config.getOrThrow<string>('TWO_FACTOR_ENCRYPTION_KEY').trim();
+    if (!/^[0-9a-fA-F]{64}$/.test(hexKey)) {
+      throw new Error('TWO_FACTOR_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes).');
+    }
+
     this.encKey = Buffer.from(hexKey, 'hex');
   }
 
