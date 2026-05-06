@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -49,7 +48,6 @@ export default function TwoFASetup() {
       });
       setBackupCodes(data.backupCodes);
       setStep('backup');
-      // Refresh user info to reflect 2FA enabled
       if (user && accessToken && refreshToken) {
         const meResp = await api.get('/auth/me');
         setAuth(meResp.data, accessToken, refreshToken);

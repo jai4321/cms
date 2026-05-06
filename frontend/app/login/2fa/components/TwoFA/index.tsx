@@ -41,7 +41,6 @@ export default function TwoFAForm() {
         { code: values.code },
         { headers: { Authorization: `Bearer ${preAuthToken}` } },
       );
-      // Fetch user info after getting tokens
       const meResp = await api.get('/auth/me', {
         headers: { Authorization: `Bearer ${data.accessToken}` },
       });

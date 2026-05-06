@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BackupCodeForm } from './components/BackupCode';
+import BackupCodeForm from './components/BackupCode';
 
 export default function BackupCodePage() {
   return (

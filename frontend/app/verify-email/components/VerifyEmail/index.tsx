@@ -40,9 +40,7 @@ export default function VerifyEmailStatus() {
           </Link>
         </>
       )}
-      {status === 'error' && (
-        <p className="text-destructive">{message}</p>
-      )}
+      {status === 'error' && <p className="text-destructive">{message}</p>}
     </div>
   );
 }

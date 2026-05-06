@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TwoFAForm } from './components/TwoFA';
+import TwoFAForm from './components/TwoFA';
 
 export default function TwoFAPage() {
   return (

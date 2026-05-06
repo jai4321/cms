@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TwoFASetup } from './components/Security';
+import TwoFASetup from './components/Security';
 
 export default function SecuritySettingsPage() {
   return (

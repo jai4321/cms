@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { VerifyEmailStatus } from './components/VerifyEmail';
+import VerifyEmailStatus from './components/VerifyEmail';
 
 export default function VerifyEmailPage() {
   return (
