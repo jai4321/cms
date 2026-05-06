@@ -1,18 +1,32 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/auth.store';
+import { useUiStore } from '@/store/ui.store';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   withCredentials: false,
 });
 
+function startLoader() {
+  useUiStore.getState().startLoading();
+}
+
+function stopLoader() {
+  useUiStore.getState().stopLoading();
+}
+
 // Attach access token to every request
 api.interceptors.request.use((config) => {
+  startLoader();
   const token = useAuthStore.getState().accessToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
+},
+(error) => {
+  stopLoader();
+  return Promise.reject(error);
 });
 
 let isRefreshing = false;
@@ -31,8 +45,12 @@ function processQueue(error: unknown, token: string | null) {
 
 // Auto-refresh on 401
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    stopLoader();
+    return res;
+  },
   async (error) => {
+    stopLoader();
     const originalRequest = error.config;
     if (error.response?.status !== 401 || originalRequest._retry) {
       return Promise.reject(error);

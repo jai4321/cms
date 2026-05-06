@@ -20,12 +20,12 @@ type FormValues = z.infer<typeof schema>;
 
 export default function TwoFAForm() {
   const router = useRouter();
-  const { preAuthToken, setAuth } = useAuthStore();
+  const { preAuthToken, isAuthenticated, setAuth } = useAuthStore();
   const [serverError, setServerError] = useState('');
 
   useEffect(() => {
-    if (!preAuthToken) router.replace('/login');
-  }, [preAuthToken, router]);
+    if (!preAuthToken && !isAuthenticated) router.replace('/login');
+  }, [preAuthToken, isAuthenticated, router]);
 
   const {
     register,

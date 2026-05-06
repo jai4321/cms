@@ -7,7 +7,6 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import * as crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
@@ -107,8 +106,6 @@ export class AuthService {
     }
 
     const { accessToken, refreshToken } = await this.issueTokens(user);
-    console.log('Access Token:', accessToken);
-    console.log('Refresh Token:', refreshToken);
     return { accessToken, refreshToken, user: toSafeUser(user) };
   }
 
@@ -199,7 +196,14 @@ export class AuthService {
       expiresIn: this.config.get('JWT_EXPIRES_IN', '15m'),
     });
 
-    const refreshToken = crypto.randomBytes(40).toString('hex');
+    const refreshToken = this.jwtService.sign(
+      { sub: user.id, email: user.email, refresh: true },
+      {
+        secret: this.config.getOrThrow('JWT_REFRESH_SECRET'),
+        expiresIn: this.config.get('JWT_REFRESH_EXPIRES_IN', '7d'),
+      },
+    );
+
     const refreshTokenHash = await bcrypt.hash(refreshToken, SALT_ROUNDS);
     const refreshExpiry = new Date(
       Date.now() +
