@@ -14,14 +14,15 @@ Mark steps done with [x] in the phase file, then update the counts in this table
 |---|---|---|---|---|---|
 | [1](phase-1.md) | Foundation, Auth and 2FA | 18/18 | 11/11 | 29/29 (100%) | DONE |
 | [2](phase-2.md) | Workspaces | 0/11 | 0/4 | 0/15 (0%) | Not started |
-| [3](phase-3.md) | Channels and Direct Messages | 0/10 | 0/11 | 0/21 (0%) | Not started |
-| [4](phase-4.md) | Real-time Messaging | 0/11 | 0/7 | 0/18 (0%) | Not started |
+| [3](phase-3.md) | Direct Messages | 0/6 | 0/8 | 0/14 (0%) | Not started |
+| [4](phase-4.md) | Real-time Messaging | 0/9 | 0/7 | 0/16 (0%) | Not started |
 | [5](phase-5.md) | Threads, Reactions, Mentions | 0/8 | 0/5 | 0/13 (0%) | Not started |
 | [6](phase-6.md) | File and Media Attachments | 0/6 | 0/6 | 0/12 (0%) | Not started |
 | [7](phase-7.md) | Presence and Notifications | 0/7 | 0/6 | 0/13 (0%) | Not started |
 | [8](phase-8.md) | Search | 0/2 | 0/3 | 0/5 (0%) | Not started |
-| [9](phase-9.md) | Polish and Production | 0/6 | 0/6 | 0/12 (0%) | Not started |
-| | TOTAL | 18/79 | 11/59 | 29/138 (21%) | In progress |
+| [9](phase-9.md) | Channels | 0/12 | 0/4 | 0/16 (0%) | Not started |
+| [10](phase-10.md) | Polish and Production | 0/6 | 0/6 | 0/12 (0%) | Not started |
+| | TOTAL | 18/85 | 11/60 | 29/145 (20%) | In progress |
 
 ---
 

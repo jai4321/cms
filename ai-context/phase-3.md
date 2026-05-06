@@ -1,54 +1,42 @@
-# Phase 3 - Channels and Direct Messages (Structure)
+# Phase 3 - Direct Messages
 
-Status: Not started (0/21)
-Backend: 0/10 | Frontend: 0/11
+Status: Not started (0/14)
+Backend: 0/6 | Frontend: 0/8
 
 ---
 
-## Backend (0/10)
+## Backend (0/6)
 
 ### Schema
-- [ ] channels table: id, workspace_id (FK), name, description, is_private, is_archived, created_by (FK), created_at, updated_at
-- [ ] channel_members table: id, channel_id (FK), user_id (FK), joined_at
 - [ ] direct_message_conversations table: id, workspace_id (FK), created_at
 - [ ] dm_participants table: id, conversation_id (FK), user_id (FK)
 
-### Channel Endpoints
-- [ ] POST   /workspaces/:id/channels - create channel
-- [ ] GET    /workspaces/:id/channels - list channels (public: all; private: joined only)
-- [ ] PATCH  /channels/:id - update name/description
-- [ ] POST   /channels/:id/join - join public channel
-- [ ] POST   /channels/:id/leave - leave channel
-- [ ] PATCH  /channels/:id/archive - archive channel (admin+)
-
 ### DM Endpoints
-- [ ] POST /workspaces/:id/dm - create or retrieve existing 1:1 DM conversation
-- [ ] GET  /workspaces/:id/dm - list all DM conversations for current user
-- [ ] POST /dm/:id/participants - add participant (group DM)
+- [ ] POST /workspaces/:id/dm - create or retrieve existing DM conversation (1:1 or group; matched by exact participant set)
+- [ ] GET  /workspaces/:id/dm - list all DM conversations the current user is part of in this workspace
+- [ ] POST /dm/:id/participants - add a participant to an existing group DM
+- [ ] GET  /dm/:id/participants - list all participants in a DM conversation
 
 ### Validation
-- [ ] Membership guard on all channel and DM endpoints
+- [ ] ParticipantGuard - verify requesting user is a participant of the DM conversation before accessing it
 
 ---
 
-## Frontend (0/11)
+## Frontend (0/8)
 
 ### Layout
-- [ ] Root app layout with left sidebar: workspace switcher + channels list + DMs list
-- [ ] Channel list in sidebar (with unread indicator placeholder)
-- [ ] DMs list in sidebar (avatar + name)
+- [ ] Root app layout with left sidebar: workspace switcher + DMs list
+- [ ] DMs list in sidebar (avatar + participant names preview)
 
 ### Modals
-- [ ] Create channel modal (name, description, public/private toggle)
-- [ ] Start DM modal (search users by name/email, click to open DM)
+- [ ] Start DM modal (search workspace members by name/email; multi-select for group DM)
 
 ### Detail Views
-- [ ] Channel detail view shell (header + empty message area)
-- [ ] DM detail view shell (header with participant avatars + empty message area)
+- [ ] DM detail view shell (header with participant avatars + empty message area placeholder)
 
 ### Floating Chat Dock
 - [ ] chatDockStore (Zustand): openBoxes array with { conversationId, minimized, unreadCount }
 - [ ] ChatDock component in root layout (persists across page navigation)
-- [ ] ChatBox component: avatar + name header, minimize/close buttons, message list area, message input
+- [ ] ChatBox component: participant avatar + name header, minimize/close buttons, message list area, message input
 - [ ] Max 3 boxes visible; overflow collapses into stacked icon strip with +N badge
-- [ ] Clicking any user avatar/name anywhere opens that DM as a floating chat box
+- [ ] Clicking any user avatar/name anywhere in the app opens that DM as a floating chat box

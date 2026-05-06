@@ -1,26 +1,38 @@
-# Phase 9 - Polish and Production Readiness
+# Phase 9 - Channels
 
-Status: Not started (0/12)
-Backend: 0/6 | Frontend: 0/6
-
----
-
-## Backend (0/6)
-
-- [ ] Rate limiting: @nestjs/throttler on public endpoints (register, login, forgot-password)
-- [ ] Security headers: helmet() middleware + explicit CORS origin allowlist
-- [ ] Request logging: Pino or Winston, structured JSON output with request id
-- [ ] Health check: GET /health returns { status: ok, db: ok, redis: ok }
-- [ ] CI migrations: drizzle-kit migrate step in GitHub Actions workflow before deploy
-- [ ] Docker Compose production profile: no exposed ports for pg/redis, resource limits, restart: always
+Status: Not started (0/16)
+Backend: 0/12 | Frontend: 0/4
 
 ---
 
-## Frontend (0/6)
+## Backend (0/12)
 
-- [ ] Skeleton loaders on all async surfaces (message list, sidebar, members, notifications)
-- [ ] Error boundaries at page and major component level with friendly fallback UI
-- [ ] Dark mode: Tailwind dark class + shadcn/ui theme; persist in localStorage; toggle in user menu
-- [ ] Keyboard shortcuts (Ctrl+K search, Alt+Up/Down channel nav, Esc close panels)
-- [ ] Mobile-responsive layout (collapsible sidebar, bottom nav bar, full-screen chat on mobile)
-- [ ] PWA: manifest.json with icons, service worker for offline page caching
+### Schema
+- [ ] channels table: id, workspace_id (FK), name, description, is_private, is_archived, created_by (FK users), created_at, updated_at
+- [ ] channel_members table: id, channel_id (FK), user_id (FK), joined_at
+- [ ] Add channel_id (FK nullable) to messages table via Drizzle migration
+
+### Channel Endpoints
+- [ ] POST   /workspaces/:id/channels - create channel (requester auto-joins as first member)
+- [ ] GET    /workspaces/:id/channels - list channels (public: all; private: joined only)
+- [ ] PATCH  /channels/:id - update name/description (admin+)
+- [ ] POST   /channels/:id/join - join a public channel
+- [ ] POST   /channels/:id/leave - leave a channel
+- [ ] PATCH  /channels/:id/archive - archive channel (admin+)
+
+### Message Endpoints (Channel)
+- [ ] POST /channels/:id/messages - send message to channel
+- [ ] GET  /channels/:id/messages?cursor=&limit= - paginated channel message history
+
+### Socket.IO
+- [ ] Extend gateway: room join for channel:channelId rooms on connect
+- [ ] Extend ChannelMemberGuard to block non-members from private channel rooms
+
+---
+
+## Frontend (0/4)
+
+- [ ] Channel list in sidebar (with unread indicator)
+- [ ] Create channel modal (name, description, public/private toggle)
+- [ ] Channel detail view (header + message list wired to channel socket room)
+- [ ] Workspace settings: manage channels (archive, edit name/description)

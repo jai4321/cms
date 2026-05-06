@@ -1,27 +1,25 @@
 # Phase 4 - Real-time Messaging (Core)
 
-Status: Not started (0/18)
-Backend: 0/11 | Frontend: 0/7
+Status: Not started (0/15)
+Backend: 0/9 | Frontend: 0/7
 
 ---
 
-## Backend (0/11)
+## Backend (0/9)
 
 ### Schema
-- [ ] messages table: id, channel_id (FK nullable), conversation_id (FK nullable), sender_id (FK), content, edited_at, deleted_at, created_at
+- [ ] messages table: id, conversation_id (FK), sender_id (FK), content, edited_at, deleted_at, created_at
 - [ ] message_reads table: id, message_id (FK), user_id (FK), read_at
 
 ### REST Endpoints
-- [ ] POST /channels/:id/messages - send message to channel
-- [ ] GET  /channels/:id/messages?cursor=&limit= - paginated history (cursor-based)
-- [ ] POST /dm/:id/messages - send DM message
-- [ ] GET  /dm/:id/messages?cursor=&limit= - paginated DM history
+- [ ] POST /dm/:id/messages - send message to a DM conversation
+- [ ] GET  /dm/:id/messages?cursor=&limit= - paginated DM message history (cursor-based)
 
 ### Socket.IO Gateway
 - [ ] Install: @nestjs/websockets, socket.io, @socket.io/redis-adapter, ioredis
 - [ ] Socket.IO gateway with JWT handshake auth (token from handshake.auth.token)
 - [ ] Redis pub/sub adapter for multi-instance readiness
-- [ ] Room join on connect: channel:ID or dm:ID
+- [ ] Room join on connect: dm:conversationId (user joins rooms for all their DM conversations)
 - [ ] message:send event - save to DB, broadcast to room with sender info populated
 - [ ] message:typing event - ephemeral broadcast to room (no DB write)
 - [ ] Handle disconnect: leave rooms
