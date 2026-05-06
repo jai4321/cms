@@ -1,0 +1,69 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import api from '@/lib/api';
+import { useWorkspaceStore } from '@/store/workspace.store';
+import { GeneralSection, InviteSection, MembersSection } from './components/WorkspaceSettings';
+import type { Workspace, WorkspaceMember } from '@/lib/types';
+
+export default function WorkspaceSettingsPage() {
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const { workspaces, setActiveWorkspace } = useWorkspaceStore();
+  const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [members, setMembers] = useState<WorkspaceMember[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Try to get workspace from store first
+    const cached = workspaces.find((w) => w.id === id);
+    if (cached) setWorkspace(cached);
+
+    Promise.all([
+      api.get<Workspace>(`/workspaces/${id}`),
+      api.get<WorkspaceMember[]>(`/workspaces/${id}/members`),
+    ])
+      .then(([wsRes, membersRes]) => {
+        // Merge role from store since API doesn't return it
+        const role = cached?.role ?? 'member';
+        const ws = { ...wsRes.data, role };
+        setWorkspace(ws);
+        setActiveWorkspace(ws);
+        setMembers(membersRes.data);
+      })
+      .catch(() => router.replace('/workspaces'))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading || !workspace) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-indigo-600" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto px-8 py-8">
+      <h1 className="mb-6 text-xl font-bold text-slate-900">
+        Workspace settings
+      </h1>
+
+      <div className="space-y-6 max-w-2xl">
+        <GeneralSection workspace={workspace} />
+
+        <InviteSection
+          workspace={workspace}
+          onInvited={(member) => setMembers((prev) => [...prev, member])}
+        />
+
+        <MembersSection
+          workspace={workspace}
+          members={members}
+          onMembersChange={setMembers}
+        />
+      </div>
+    </div>
+  );
+}

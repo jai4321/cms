@@ -17,12 +17,18 @@ export class UsersService {
   }
 
   async findByEmail(email: string): Promise<User | undefined> {
-    const result = await this.db.select().from(users).where(eq(users.email, email));
+    const result = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.email, email));
     return result[0];
   }
 
   async findByUsername(username: string): Promise<User | undefined> {
-    const result = await this.db.select().from(users).where(eq(users.username, username));
+    const result = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.username, username));
     return result[0];
   }
 

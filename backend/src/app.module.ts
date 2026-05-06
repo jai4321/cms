@@ -4,6 +4,7 @@ import { DrizzleModule } from './db/drizzle.module';
 import { EmailModule } from './email/email.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { WorkspacesModule } from './workspaces/workspaces.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { AuthModule } from './auth/auth.module';
     EmailModule,
     UsersModule,
     AuthModule,
+    WorkspacesModule,
   ],
 })
 export class AppModule {}

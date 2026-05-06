@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { generateSecret, generateURI, verifySync } from 'otplib';
 import * as qrcode from 'qrcode';
@@ -21,9 +25,13 @@ export class TwoFactorService {
     private readonly authService: AuthService,
     private readonly config: ConfigService,
   ) {
-    const hexKey = config.getOrThrow<string>('TWO_FACTOR_ENCRYPTION_KEY').trim();
+    const hexKey = config
+      .getOrThrow<string>('TWO_FACTOR_ENCRYPTION_KEY')
+      .trim();
     if (!/^[0-9a-fA-F]{64}$/.test(hexKey)) {
-      throw new Error('TWO_FACTOR_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes).');
+      throw new Error(
+        'TWO_FACTOR_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes).',
+      );
     }
 
     this.encKey = Buffer.from(hexKey, 'hex');
@@ -33,7 +41,11 @@ export class TwoFactorService {
 
   async setup(user: User): Promise<{ secret: string; qrCodeUrl: string }> {
     const secret = generateSecret();
-    const otpAuthUrl = generateURI({ issuer: 'TeamsApp', label: user.email, secret });
+    const otpAuthUrl = generateURI({
+      issuer: 'TeamsApp',
+      label: user.email,
+      secret,
+    });
     const qrCodeUrl = await qrcode.toDataURL(otpAuthUrl);
     return { secret, qrCodeUrl };
   }
@@ -104,11 +116,14 @@ export class TwoFactorService {
       }
     }
 
-    if (matchIndex === -1) throw new UnauthorizedException('Invalid backup code');
+    if (matchIndex === -1)
+      throw new UnauthorizedException('Invalid backup code');
 
     // Remove used backup code (single-use)
     const remaining = codes.filter((_, i) => i !== matchIndex);
-    await this.usersService.update(user.id, { twoFactorBackupCodes: remaining });
+    await this.usersService.update(user.id, {
+      twoFactorBackupCodes: remaining,
+    });
 
     return this.authService.issueTokens(user);
   }
@@ -116,7 +131,8 @@ export class TwoFactorService {
   // ─── Disable ──────────────────────────────────────────────────────────────────
 
   async disable(user: User, password: string): Promise<{ message: string }> {
-    if (!user.twoFactorEnabled) throw new BadRequestException('2FA is not enabled');
+    if (!user.twoFactorEnabled)
+      throw new BadRequestException('2FA is not enabled');
 
     const passwordValid = await bcrypt.compare(password, user.passwordHash);
     if (!passwordValid) throw new UnauthorizedException('Incorrect password');
@@ -134,7 +150,10 @@ export class TwoFactorService {
   private encrypt(text: string): string {
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipheriv(ALGORITHM, this.encKey, iv);
-    const encrypted = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]);
+    const encrypted = Buffer.concat([
+      cipher.update(text, 'utf8'),
+      cipher.final(),
+    ]);
     return iv.toString('hex') + ':' + encrypted.toString('hex');
   }
 
@@ -143,14 +162,22 @@ export class TwoFactorService {
     const iv = Buffer.from(ivHex, 'hex');
     const encrypted = Buffer.from(encHex, 'hex');
     const decipher = crypto.createDecipheriv(ALGORITHM, this.encKey, iv);
-    return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8');
+    return Buffer.concat([
+      decipher.update(encrypted),
+      decipher.final(),
+    ]).toString('utf8');
   }
 
-  private async generateBackupCodes(): Promise<{ plain: string[]; hashed: string[] }> {
+  private async generateBackupCodes(): Promise<{
+    plain: string[];
+    hashed: string[];
+  }> {
     const plain: string[] = Array.from({ length: BACKUP_CODE_COUNT }, () =>
       crypto.randomBytes(5).toString('hex'),
     );
-    const hashed = await Promise.all(plain.map((c) => bcrypt.hash(c, SALT_ROUNDS)));
+    const hashed = await Promise.all(
+      plain.map((c) => bcrypt.hash(c, SALT_ROUNDS)),
+    );
     return { plain, hashed };
   }
 }
