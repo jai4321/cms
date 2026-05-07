@@ -63,7 +63,12 @@ export default function WorkspaceSettingsPage() {
 
         <InviteSection
           workspace={workspace}
-          onInvited={(member) => setMembers((prev) => [...prev, member])}
+          onInvited={() =>
+            api
+              .get<WorkspaceMember[]>(`/workspaces/${id}/members`)
+              .then((res) => setMembers(res.data))
+              .catch(() => {})
+          }
         />
 
         <MembersSection

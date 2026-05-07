@@ -32,3 +32,16 @@ export interface WorkspaceMember {
     avatarUrl?: string | null;
   };
 }
+
+export interface DmParticipant {
+  userId: string;
+  username: string;
+  avatarUrl?: string | null;
+}
+
+export interface DmConversation {
+  id: string;
+  workspaceId: string;
+  createdAt: string;
+  participants: DmParticipant[];
+}

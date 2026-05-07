@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import api from '@/lib/api';
-import type { Workspace, WorkspaceMember } from '@/lib/types';
+import type { Workspace } from '@/lib/types';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -18,7 +18,7 @@ type FormValues = z.infer<typeof schema>;
 
 interface Props {
   workspace: Workspace;
-  onInvited: (member: WorkspaceMember) => void;
+  onInvited: () => void;
 }
 
 export default function InviteSection({ workspace, onInvited }: Props) {
@@ -39,11 +39,8 @@ export default function InviteSection({ workspace, onInvited }: Props) {
     setServerError('');
     setSuccess('');
     try {
-      const { data } = await api.post<WorkspaceMember>(
-        `/workspaces/${workspace.id}/invite`,
-        values,
-      );
-      onInvited(data);
+      await api.post(`/workspaces/${workspace.id}/invite`, values);
+      onInvited();
       setSuccess(`${values.email} has been invited.`);
       reset();
     } catch (err: any) {

@@ -15,6 +15,13 @@
       "when": 1778051083588,
       "tag": "0001_tense_forgotten_one",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778137200370,
+      "tag": "0002_square_radioactive_man",
+      "breakpoints": true
     }
   ]
 }
