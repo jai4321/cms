@@ -1,10 +1,4 @@
-import {
-  pgTable,
-  uuid,
-  varchar,
-  pgEnum,
-  timestamp,
-} from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, pgEnum, timestamp } from 'drizzle-orm/pg-core';
 import { users } from './users.schema';
 
 export const workspaceRoleEnum = pgEnum('workspace_role', [

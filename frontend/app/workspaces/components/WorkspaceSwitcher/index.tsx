@@ -13,17 +13,25 @@ export default function WorkspaceSwitcher() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { workspaces, activeWorkspace, setWorkspaces, setActiveWorkspace } =
+  const { workspaces, activeWorkspace, setWorkspaces, setActiveWorkspace, setWorkspacesFetched } =
     useWorkspaceStore();
   const { logout } = useAuthStore();
 
   useEffect(() => {
-    api.get<Workspace[]>('/workspaces').then((res) => {
-      setWorkspaces(res.data);
-      if (!activeWorkspace && res.data.length > 0) {
-        setActiveWorkspace(res.data[0]);
-      }
-    });
+    const controller = new AbortController();
+    api
+      .get<Workspace[]>('/workspaces', { signal: controller.signal })
+      .then((res) => {
+        setWorkspaces(res.data);
+        setWorkspacesFetched(true);
+        if (!activeWorkspace && res.data.length > 0) {
+          setActiveWorkspace(res.data[0]);
+        }
+      })
+      .catch(() => {
+        // ignore abort or network errors — page-level handlers manage redirects
+      });
+    return () => controller.abort();
   }, []);
 
   // Close on outside click

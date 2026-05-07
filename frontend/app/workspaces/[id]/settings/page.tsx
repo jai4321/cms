@@ -16,24 +16,32 @@ export default function WorkspaceSettingsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Try to get workspace from store first
+    const controller = new AbortController();
+    setLoading(true);
+
     const cached = workspaces.find((w) => w.id === id);
     if (cached) setWorkspace(cached);
 
     Promise.all([
-      api.get<Workspace>(`/workspaces/${id}`),
-      api.get<WorkspaceMember[]>(`/workspaces/${id}/members`),
+      api.get<Workspace>(`/workspaces/${id}`, { signal: controller.signal }),
+      api.get<WorkspaceMember[]>(`/workspaces/${id}/members`, { signal: controller.signal }),
     ])
       .then(([wsRes, membersRes]) => {
-        // Merge role from store since API doesn't return it
         const role = cached?.role ?? 'member';
         const ws = { ...wsRes.data, role };
         setWorkspace(ws);
         setActiveWorkspace(ws);
         setMembers(membersRes.data);
+        setLoading(false);
       })
-      .catch(() => router.replace('/workspaces'))
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+          router.replace('/workspaces');
+        }
+      });
+
+    return () => controller.abort();
   }, [id]);
 
   if (loading || !workspace) {

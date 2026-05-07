@@ -1,7 +1,6 @@
 import {
   Injectable,
   Inject,
-  BadRequestException,
   NotFoundException,
   ForbiddenException,
   ConflictException,
@@ -9,12 +8,7 @@ import {
 import { eq, and, sql } from 'drizzle-orm';
 import { DRIZZLE } from '../db/drizzle.module';
 import type { DrizzleClient } from '../db/drizzle.client';
-import {
-  workspaces,
-  workspaceMembers,
-  users,
-} from '../db/schema';
-import type { WorkspaceRole } from '../db/schema';
+import { workspaces, workspaceMembers, users } from '../db/schema';
 import {
   CreateWorkspaceDto,
   UpdateWorkspaceDto,
@@ -103,9 +97,7 @@ export class WorkspacesService {
   // ─── Delete ───────────────────────────────────────────────────────────────────
 
   async remove(workspaceId: string) {
-    await this.db
-      .delete(workspaces)
-      .where(eq(workspaces.id, workspaceId));
+    await this.db.delete(workspaces).where(eq(workspaces.id, workspaceId));
   }
 
   // ─── Invite ───────────────────────────────────────────────────────────────────
@@ -189,12 +181,14 @@ export class WorkspacesService {
     if (!membership) throw new NotFoundException('Member not found');
 
     if (membership.role === 'owner') {
-      throw new ForbiddenException('Cannot change the role of the workspace owner');
+      throw new ForbiddenException(
+        'Cannot change the role of the workspace owner',
+      );
     }
 
     const [updated] = await this.db
       .update(workspaceMembers)
-      .set({ role: dto.role as WorkspaceRole })
+      .set({ role: dto.role })
       .where(eq(workspaceMembers.id, membership.id))
       .returning();
 

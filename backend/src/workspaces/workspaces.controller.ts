@@ -13,7 +13,10 @@ import {
 import { WorkspacesService } from './workspaces.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { WorkspaceMemberGuard } from './guards/workspace-member.guard';
-import { WorkspaceRoleGuard, RequireWorkspaceRole } from './guards/workspace-role.guard';
+import {
+  WorkspaceRoleGuard,
+  RequireWorkspaceRole,
+} from './guards/workspace-role.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import {
   CreateWorkspaceDto,
@@ -96,10 +99,7 @@ export class WorkspacesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(WorkspaceMemberGuard, WorkspaceRoleGuard)
   @RequireWorkspaceRole('admin')
-  removeMember(
-    @Param('id') id: string,
-    @Param('userId') userId: string,
-  ) {
+  removeMember(@Param('id') id: string, @Param('userId') userId: string) {
     return this.workspacesService.removeMember(id, userId);
   }
 }
