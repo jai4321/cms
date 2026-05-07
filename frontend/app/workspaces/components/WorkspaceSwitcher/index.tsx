@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, Plus, Settings, LogOut } from 'lucide-react';
+import { ChevronDown, Plus, Settings } from 'lucide-react';
 import { useWorkspaceStore } from '@/store/workspace.store';
 import { useAuthStore } from '@/store/auth.store';
 import type { Workspace } from '@/lib/types';
@@ -49,16 +49,6 @@ export default function WorkspaceSwitcher() {
     setActiveWorkspace(ws);
     setOpen(false);
     router.push(`/workspaces/${ws.id}/settings`);
-  };
-
-  const handleLogout = async () => {
-    try {
-      await api.post('/auth/logout');
-    } catch {
-      // ignore
-    }
-    logout();
-    router.replace('/login');
   };
 
   const initials = (name: string) =>
@@ -130,19 +120,9 @@ export default function WorkspaceSwitcher() {
               className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
             >
               <Settings className="h-4 w-4" />
-              Settings
+              Workspace settings
             </Link>
           )}
-
-          <div className="my-1 border-t border-slate-100" />
-
-          <button
-            onClick={handleLogout}
-            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign out
-          </button>
         </div>
       )}
     </div>

@@ -15,10 +15,14 @@ import {
   InviteMemberDto,
   UpdateMemberRoleDto,
 } from './dto/workspace.dto';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class WorkspacesService {
-  constructor(@Inject(DRIZZLE) private readonly db: DrizzleClient) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: DrizzleClient,
+    private readonly emailService: EmailService,
+  ) {}
 
   // ─── Create ───────────────────────────────────────────────────────────────────
 
@@ -102,14 +106,18 @@ export class WorkspacesService {
 
   // ─── Invite ───────────────────────────────────────────────────────────────────
 
-  async invite(workspaceId: string, dto: InviteMemberDto) {
-    const [user] = await this.db
-      .select({ id: users.id })
+  async invite(
+    workspaceId: string,
+    dto: InviteMemberDto,
+    inviterUserId?: string,
+  ) {
+    const [invitedUser] = await this.db
+      .select({ id: users.id, email: users.email })
       .from(users)
       .where(eq(users.email, dto.email))
       .limit(1);
 
-    if (!user) {
+    if (!invitedUser) {
       throw new NotFoundException('No user found with that email address');
     }
 
@@ -119,7 +127,7 @@ export class WorkspacesService {
       .where(
         and(
           eq(workspaceMembers.workspaceId, workspaceId),
-          eq(workspaceMembers.userId, user.id),
+          eq(workspaceMembers.userId, invitedUser.id),
         ),
       )
       .limit(1);
@@ -132,10 +140,39 @@ export class WorkspacesService {
       .insert(workspaceMembers)
       .values({
         workspaceId,
-        userId: user.id,
+        userId: invitedUser.id,
         role: dto.role ?? 'member',
       })
       .returning();
+
+    // Fire-and-forget invite email
+    void (async () => {
+      try {
+        const [workspace] = await this.db
+          .select({ name: workspaces.name })
+          .from(workspaces)
+          .where(eq(workspaces.id, workspaceId))
+          .limit(1);
+
+        let inviterName = 'A workspace admin';
+        if (inviterUserId) {
+          const [inviter] = await this.db
+            .select({ username: users.username })
+            .from(users)
+            .where(eq(users.id, inviterUserId))
+            .limit(1);
+          if (inviter) inviterName = inviter.username;
+        }
+
+        await this.emailService.sendWorkspaceInviteEmail(
+          invitedUser.email,
+          inviterName,
+          workspace?.name ?? 'a workspace',
+        );
+      } catch {
+        // Email failure must not affect the API response
+      }
+    })();
 
     return member;
   }

@@ -6,6 +6,8 @@ import { useAuthStore } from '@/store/auth.store';
 import WorkspaceSwitcher from './components/WorkspaceSwitcher';
 import DirectMessagesList from './components/DirectMessagesList';
 import StartDmModal from './components/StartDmModal';
+import SidebarUserFooter from './components/SidebarUserFooter';
+import ChatFullscreen from '@/components/ChatDock/ChatFullscreen';
 
 export default function WorkspacesLayout({
   children,
@@ -40,10 +42,14 @@ export default function WorkspacesLayout({
         <div className="mt-2 flex-1 overflow-y-auto">
           <DirectMessagesList onStartDm={() => setDmModalOpen(true)} />
         </div>
+        <SidebarUserFooter />
       </aside>
 
-      {/* Main content */}
-      <main className="flex min-w-0 flex-1 flex-col">{children}</main>
+      {/* Main content — relative so ChatFullscreen is scoped here */}
+      <main className="relative flex min-w-0 flex-1 flex-col">
+        <ChatFullscreen />
+        {children}
+      </main>
 
       {/* Start DM modal */}
       <StartDmModal

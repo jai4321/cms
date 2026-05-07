@@ -71,8 +71,12 @@ export class WorkspacesController {
   @Post(':id/invite')
   @UseGuards(WorkspaceMemberGuard, WorkspaceRoleGuard)
   @RequireWorkspaceRole('admin')
-  invite(@Param('id') id: string, @Body() dto: InviteMemberDto) {
-    return this.workspacesService.invite(id, dto);
+  invite(
+    @Param('id') id: string,
+    @Body() dto: InviteMemberDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.workspacesService.invite(id, dto, user.id);
   }
 
   // GET /workspaces/:id/members

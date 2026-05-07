@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useWorkspaceStore } from '@/store/workspace.store';
+import { useAuthStore } from '@/store/auth.store';
 import { GeneralSection, InviteSection, MembersSection } from './components/WorkspaceSettings';
 import type { Workspace, WorkspaceMember } from '@/lib/types';
 
@@ -11,6 +12,7 @@ export default function WorkspaceSettingsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { workspaces, setActiveWorkspace } = useWorkspaceStore();
+  const { user } = useAuthStore();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +29,10 @@ export default function WorkspaceSettingsPage() {
       api.get<WorkspaceMember[]>(`/workspaces/${id}/members`, { signal: controller.signal }),
     ])
       .then(([wsRes, membersRes]) => {
-        const role = cached?.role ?? 'member';
+        // Derive role from the members list (current user's membership) so a
+        // hard reload doesn't lose the role when the store cache is empty.
+        const myMembership = membersRes.data.find((m) => m.user.id === user?.id);
+        const role = myMembership?.role ?? cached?.role ?? 'member';
         const ws = { ...wsRes.data, role };
         setWorkspace(ws);
         setActiveWorkspace(ws);

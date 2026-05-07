@@ -1,6 +1,6 @@
 'use client';
 
-import { Minus, X, Send } from 'lucide-react';
+import { Minus, X, Send, Maximize2 } from 'lucide-react';
 import type { ChatBox as ChatBoxType } from '@/store/chat-dock.store';
 import { useChatDockStore } from '@/store/chat-dock.store';
 import { useAuthStore } from '@/store/auth.store';
@@ -33,7 +33,7 @@ function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }
 }
 
 export default function ChatBox({ box }: Props) {
-  const { toggleMinimize, closeDm } = useChatDockStore();
+  const { toggleMinimize, closeDm, setFullscreen } = useChatDockStore();
   const { user } = useAuthStore();
 
   const others = box.participants.filter((p) => p.userId !== user?.id);
@@ -63,6 +63,13 @@ export default function ChatBox({ box }: Props) {
             {box.unreadCount}
           </span>
         )}
+        <button
+          onClick={() => setFullscreen(box.conversationId)}
+          className="rounded p-0.5 text-slate-400 hover:text-white transition-colors"
+          title="Open full screen"
+        >
+          <Maximize2 className="h-4 w-4" />
+        </button>
         <button
           onClick={() => toggleMinimize(box.conversationId)}
           className="rounded p-0.5 text-slate-400 hover:text-white transition-colors"

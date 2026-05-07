@@ -40,6 +40,22 @@ export class EmailService {
     );
   }
 
+  async sendWorkspaceInviteEmail(
+    email: string,
+    inviterName: string,
+    workspaceName: string,
+  ): Promise<void> {
+    const appUrl = this.config.get<string>('APP_URL', 'http://localhost:3000');
+    const link = `${appUrl}/workspaces`;
+    await this.send(
+      email,
+      `You've been invited to ${workspaceName}`,
+      `${inviterName} has invited you to join ${workspaceName}. Visit ${link} to get started.`,
+      `<p><strong>${inviterName}</strong> has invited you to join the workspace <strong>${workspaceName}</strong>.</p>
+<p><a href="${link}">Click here to open your workspaces</a></p>`,
+    );
+  }
+
   private async send(
     to: string,
     subject: string,
