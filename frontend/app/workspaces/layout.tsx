@@ -8,6 +8,7 @@ import DirectMessagesList from './components/DirectMessagesList';
 import StartDmModal from './components/StartDmModal';
 import SidebarUserFooter from './components/SidebarUserFooter';
 import ChatFullscreen from '@/components/ChatDock/ChatFullscreen';
+import SocketManager from '@/components/SocketManager';
 
 export default function WorkspacesLayout({
   children,
@@ -36,6 +37,7 @@ export default function WorkspacesLayout({
 
   return (
     <div className="flex min-h-screen bg-slate-100">
+      <SocketManager />
       {/* Left sidebar */}
       <aside className="flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
         <WorkspaceSwitcher />

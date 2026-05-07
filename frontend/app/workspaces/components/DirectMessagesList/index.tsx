@@ -7,6 +7,8 @@ import { useAuthStore } from '@/store/auth.store';
 import { useWorkspaceStore } from '@/store/workspace.store';
 import { useChatDockStore } from '@/store/chat-dock.store';
 import type { DmConversation } from '@/lib/types';
+import { useMessageStore } from '@/store/message.store';
+
 import api from '@/lib/api';
 
 interface Props {
@@ -61,7 +63,8 @@ export default function DirectMessagesList({ onStartDm }: Props) {
   const router = useRouter();
   const { user } = useAuthStore();
   const { activeWorkspace } = useWorkspaceStore();
-  const { openDm } = useChatDockStore();
+  const { openDm, openBoxes } = useChatDockStore();
+  const { sidebarUnread } = useMessageStore();
   const [conversations, setConversations] = useState<DmConversation[]>([]);
 
   const fetchConversations = useCallback(async () => {
@@ -119,6 +122,8 @@ export default function DirectMessagesList({ onStartDm }: Props) {
             (p) => p.userId !== user.id,
           );
           const label = dmLabel(conv, user.id);
+          const dockedBox = openBoxes.find((b) => b.conversationId === conv.id);
+          const unread = dockedBox ? dockedBox.unreadCount : (sidebarUnread[conv.id] ?? 0);
 
           return (
             <li key={conv.id}>
@@ -152,6 +157,11 @@ export default function DirectMessagesList({ onStartDm }: Props) {
                 <span className="min-w-0 flex-1 truncate text-left">
                   {label}
                 </span>
+                {unread > 0 && (
+                  <span className="ml-auto shrink-0 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                    {unread > 99 ? '99+' : unread}
+                  </span>
+                )}
               </button>
             </li>
           );

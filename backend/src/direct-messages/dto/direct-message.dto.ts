@@ -1,4 +1,16 @@
-import { IsArray, IsUUID, ArrayMinSize } from 'class-validator';
+import {
+  IsArray,
+  IsUUID,
+  ArrayMinSize,
+  IsString,
+  IsNotEmpty,
+  MaxLength,
+  IsOptional,
+  IsInt,
+  Min,
+  Max,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateDmDto {
   @IsArray()
@@ -10,4 +22,24 @@ export class CreateDmDto {
 export class AddParticipantDto {
   @IsUUID('4')
   userId: string;
+}
+
+export class SendMessageDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(4000)
+  content: string;
+}
+
+export class GetMessagesDto {
+  @IsOptional()
+  @IsUUID('4')
+  cursor?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number;
 }

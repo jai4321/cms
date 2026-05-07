@@ -4,15 +4,21 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, lt, desc, isNull } from 'drizzle-orm';
 import { DRIZZLE } from '../db/drizzle.module';
 import type { DrizzleClient } from '../db/drizzle.client';
 import {
   directMessageConversations,
   dmParticipants,
   users,
+  messages,
 } from '../db/schema';
-import { CreateDmDto, AddParticipantDto } from './dto/direct-message.dto';
+import {
+  CreateDmDto,
+  AddParticipantDto,
+  SendMessageDto,
+  GetMessagesDto,
+} from './dto/direct-message.dto';
 
 @Injectable()
 export class DirectMessagesService {
@@ -220,5 +226,106 @@ export class DirectMessagesService {
       .where(eq(dmParticipants.conversationId, conversationId));
 
     return rows;
+  }
+
+  // ─── Send a message ───────────────────────────────────────────────────────────
+
+  async sendMessage(
+    conversationId: string,
+    senderId: string,
+    dto: SendMessageDto,
+  ) {
+    const [message] = await this.db
+      .insert(messages)
+      .values({ conversationId, senderId, content: dto.content })
+      .returning();
+
+    const [sender] = await this.db
+      .select({
+        id: users.id,
+        username: users.username,
+        avatarUrl: users.avatarUrl,
+      })
+      .from(users)
+      .where(eq(users.id, senderId))
+      .limit(1);
+
+    return { ...message, sender };
+  }
+
+  // ─── Get message by ID (with sender) ─────────────────────────────────────────
+
+  async getMessageById(messageId: string) {
+    const [row] = await this.db
+      .select({
+        id: messages.id,
+        conversationId: messages.conversationId,
+        content: messages.content,
+        editedAt: messages.editedAt,
+        deletedAt: messages.deletedAt,
+        createdAt: messages.createdAt,
+        sender: {
+          id: users.id,
+          username: users.username,
+          avatarUrl: users.avatarUrl,
+        },
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.senderId, users.id))
+      .where(eq(messages.id, messageId))
+      .limit(1);
+    return row ?? null;
+  }
+
+  // ─── Paginated message history ────────────────────────────────────────────────
+
+  async getMessages(conversationId: string, dto: GetMessagesDto) {
+    const limit = dto.limit ?? 50;
+
+    const conditions = [
+      eq(messages.conversationId, conversationId),
+      isNull(messages.deletedAt),
+    ];
+
+    if (dto.cursor) {
+      // Cursor is a message createdAt timestamp encoded as ISO string via the message id
+      // We use message id as cursor (UUID v4 has no ordering) so we use createdAt
+      // Strategy: fetch message by cursor id to get its createdAt, then fetch older
+      const [cursorMsg] = await this.db
+        .select({ createdAt: messages.createdAt })
+        .from(messages)
+        .where(eq(messages.id, dto.cursor))
+        .limit(1);
+
+      if (cursorMsg) {
+        conditions.push(lt(messages.createdAt, cursorMsg.createdAt));
+      }
+    }
+
+    const rows = await this.db
+      .select({
+        id: messages.id,
+        conversationId: messages.conversationId,
+        content: messages.content,
+        editedAt: messages.editedAt,
+        deletedAt: messages.deletedAt,
+        createdAt: messages.createdAt,
+        sender: {
+          id: users.id,
+          username: users.username,
+          avatarUrl: users.avatarUrl,
+        },
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.senderId, users.id))
+      .where(and(...conditions))
+      .orderBy(desc(messages.createdAt))
+      .limit(limit + 1);
+
+    const hasMore = rows.length > limit;
+    const items = hasMore ? rows.slice(0, limit) : rows;
+    const nextCursor = hasMore ? items[items.length - 1].id : null;
+
+    return { items, nextCursor, hasMore };
   }
 }

@@ -45,3 +45,22 @@ export interface DmConversation {
   createdAt: string;
   participants: DmParticipant[];
 }
+
+export interface MessageSender {
+  id: string;
+  username: string;
+  avatarUrl?: string | null;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  content: string;
+  editedAt: string | null;
+  deletedAt: string | null;
+  createdAt: string;
+  sender: MessageSender;
+  _optimistic?: boolean;
+}
+

@@ -15,7 +15,7 @@ Mark steps done with [x] in the phase file, then update the counts in this table
 | [1](phase-1.md) | Foundation, Auth and 2FA | 18/18 | 11/11 | 29/29 (100%) | DONE |
 | [2](phase-2.md) | Workspaces | 11/11 | 4/4 | 15/15 (100%) | DONE |
 | [3](phase-3.md) | Direct Messages | 6/6 | 8/8 | 14/14 (100%) | DONE |
-| [4](phase-4.md) | Real-time Messaging | 0/9 | 0/7 | 0/16 (0%) | Not started |
+| [4](phase-4.md) | Real-time Messaging | 9/9 | 7/7 | 16/16 (100%) | DONE |
 | [5](phase-5.md) | Threads, Reactions, Mentions | 0/8 | 0/5 | 0/13 (0%) | Not started |
 | [6](phase-6.md) | File and Media Attachments | 0/6 | 0/6 | 0/12 (0%) | Not started |
 | [7](phase-7.md) | Presence and Notifications | 0/7 | 0/6 | 0/13 (0%) | Not started |

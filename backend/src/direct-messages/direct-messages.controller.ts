@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Param,
+  Query,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -13,7 +14,12 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { WorkspaceMemberGuard } from '../workspaces/guards/workspace-member.guard';
 import { ParticipantGuard } from './guards/participant.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { CreateDmDto, AddParticipantDto } from './dto/direct-message.dto';
+import {
+  CreateDmDto,
+  AddParticipantDto,
+  SendMessageDto,
+  GetMessagesDto,
+} from './dto/direct-message.dto';
 import type { User } from '../db/schema';
 
 // ─── Workspace-scoped DM routes ───────────────────────────────────────────────
@@ -68,5 +74,25 @@ export class DmsController {
   @Get('participants')
   listParticipants(@Param('conversationId') conversationId: string) {
     return this.directMessagesService.listParticipants(conversationId);
+  }
+
+  // POST /dm/:conversationId/messages
+  @Post('messages')
+  @HttpCode(HttpStatus.CREATED)
+  sendMessage(
+    @Param('conversationId') conversationId: string,
+    @CurrentUser() user: User,
+    @Body() dto: SendMessageDto,
+  ) {
+    return this.directMessagesService.sendMessage(conversationId, user.id, dto);
+  }
+
+  // GET /dm/:conversationId/messages?cursor=&limit=
+  @Get('messages')
+  getMessages(
+    @Param('conversationId') conversationId: string,
+    @Query() query: GetMessagesDto,
+  ) {
+    return this.directMessagesService.getMessages(conversationId, query);
   }
 }

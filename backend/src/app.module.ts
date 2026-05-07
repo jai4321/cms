@@ -6,6 +6,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { WorkspacesModule } from './workspaces/workspaces.module';
 import { DirectMessagesModule } from './direct-messages/direct-messages.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { DirectMessagesModule } from './direct-messages/direct-messages.module';
     AuthModule,
     WorkspacesModule,
     DirectMessagesModule,
+    ChatModule,
   ],
 })
 export class AppModule {}

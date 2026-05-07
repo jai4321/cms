@@ -10,5 +10,6 @@ import { ParticipantGuard } from './guards/participant.guard';
 @Module({
   controllers: [WorkspaceDmsController, DmsController],
   providers: [DirectMessagesService, WorkspaceMemberGuard, ParticipantGuard],
+  exports: [DirectMessagesService],
 })
 export class DirectMessagesModule {}
