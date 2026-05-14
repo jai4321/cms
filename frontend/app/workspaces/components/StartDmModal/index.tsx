@@ -38,7 +38,7 @@ function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }
 
 export default function StartDmModal({ onClose }: Props) {
   const { user } = useAuthStore();
-  const { activeWorkspace } = useWorkspaceStore();
+  const { activeWorkspace, addConversation } = useWorkspaceStore();
   const { openDm } = useChatDockStore();
 
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
@@ -93,6 +93,7 @@ export default function StartDmModal({ onClose }: Props) {
         body,
       );
       const conversation = res.data;
+      addConversation(conversation);
       openDm({
         conversationId: conversation.id,
         participants: conversation.participants ?? [],

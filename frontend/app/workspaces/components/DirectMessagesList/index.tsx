@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useWorkspaceStore } from '@/store/workspace.store';
@@ -82,28 +81,18 @@ function dmLabel(conversation: DmConversation, currentUserId: string): string {
 }
 
 export default function DirectMessagesList({ onStartDm }: Props) {
-  const router = useRouter();
   const { user } = useAuthStore();
-  const { activeWorkspace } = useWorkspaceStore();
+  const { activeWorkspace, conversations, setConversations } = useWorkspaceStore();
   const { openDm, openBoxes } = useChatDockStore();
   const { sidebarUnread } = useMessageStore();
-  const [conversations, setConversations] = useState<DmConversation[]>([]);
-
-  const fetchConversations = useCallback(async () => {
-    if (!activeWorkspace) return;
-    try {
-      const res = await api.get<DmConversation[]>(
-        `/workspaces/${activeWorkspace.id}/dm`,
-      );
-      setConversations(res.data);
-    } catch {
-      // ignore
-    }
-  }, [activeWorkspace?.id]);
 
   useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
+    if (!activeWorkspace) return;
+    api
+      .get<DmConversation[]>(`/workspaces/${activeWorkspace.id}/dm`)
+      .then((res) => setConversations(res.data))
+      .catch(() => {});
+  }, [activeWorkspace?.id]);
 
   const handleOpen = (conversation: DmConversation) => {
     if (!activeWorkspace) return;
