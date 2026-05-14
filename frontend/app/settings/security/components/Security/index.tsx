@@ -15,7 +15,7 @@ interface SetupData {
 }
 
 export default function TwoFASetup() {
-  const { user, setAuth, accessToken, refreshToken } = useAuthStore();
+  const { user, setAuth, accessToken } = useAuthStore();
   const [step, setStep] = useState<Step>('idle');
   const [setupData, setSetupData] = useState<SetupData | null>(null);
   const [code, setCode] = useState('');
@@ -48,9 +48,9 @@ export default function TwoFASetup() {
       });
       setBackupCodes(data.backupCodes);
       setStep('backup');
-      if (user && accessToken && refreshToken) {
+      if (user && accessToken) {
         const meResp = await api.get('/auth/me');
-        setAuth(meResp.data, accessToken, refreshToken);
+        setAuth(meResp.data, accessToken);
       }
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Failed to enable 2FA');
@@ -65,9 +65,9 @@ export default function TwoFASetup() {
     setError('');
     try {
       await api.post('/auth/2fa/disable', { password });
-      if (user && accessToken && refreshToken) {
+      if (user && accessToken) {
         const meResp = await api.get('/auth/me');
-        setAuth(meResp.data, accessToken, refreshToken);
+        setAuth(meResp.data, accessToken);
       }
       setStep('idle');
       setSetupData(null);

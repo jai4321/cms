@@ -5,14 +5,13 @@ import type { User } from '@/lib/types';
 interface AuthState {
   user: User | null;
   accessToken: string | null;
-  refreshToken: string | null;
   isAuthenticated: boolean;
   hasHydrated: boolean;
   requires2FA: boolean;
   preAuthToken: string | null;
 
-  setAuth: (user: User, accessToken: string, refreshToken: string) => void;
-  setTokens: (accessToken: string, refreshToken: string) => void;
+  setAuth: (user: User, accessToken: string) => void;
+  setTokens: (accessToken: string) => void;
   setPreAuth: (preAuthToken: string) => void;
   setHasHydrated: (value: boolean) => void;
   logout: () => void;
@@ -23,24 +22,22 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       accessToken: null,
-      refreshToken: null,
       isAuthenticated: false,
       hasHydrated: false,
       requires2FA: false,
       preAuthToken: null,
 
-      setAuth: (user, accessToken, refreshToken) =>
+      setAuth: (user, accessToken) =>
         set({
           user,
           accessToken,
-          refreshToken,
           isAuthenticated: true,
           requires2FA: false,
           preAuthToken: null,
         }),
 
-      setTokens: (accessToken, refreshToken) =>
-        set({ accessToken, refreshToken }),
+      setTokens: (accessToken) =>
+        set({ accessToken }),
 
       setPreAuth: (preAuthToken) =>
         set({ requires2FA: true, preAuthToken, isAuthenticated: false }),
@@ -51,7 +48,6 @@ export const useAuthStore = create<AuthState>()(
         set({
           user: null,
           accessToken: null,
-          refreshToken: null,
           isAuthenticated: false,
           hasHydrated: true,
           requires2FA: false,
@@ -66,7 +62,6 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         user: state.user,
         accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
     },

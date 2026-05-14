@@ -4,7 +4,7 @@ import { useUiStore } from '@/store/ui.store';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
-  withCredentials: false,
+  withCredentials: true,
 });
 
 function startLoader() {
@@ -70,14 +70,14 @@ api.interceptors.response.use(
 
     try {
       const store = useAuthStore.getState();
-      if (!store.refreshToken) throw new Error('No refresh token');
 
       const { data } = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
-        { refreshToken: store.refreshToken },
+        {},
+        { withCredentials: true },
       );
 
-      store.setTokens(data.accessToken, data.refreshToken);
+      store.setTokens(data.accessToken);
       processQueue(null, data.accessToken);
       originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
       return api(originalRequest);

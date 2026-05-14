@@ -45,7 +45,7 @@ export default function LoginForm() {
         return;
       }
 
-      setAuth(data.user, data.accessToken, data.refreshToken);
+      setAuth(data.user, data.accessToken);
       router.push('/');
     } catch (err: any) {
       setServerError(err?.response?.data?.message ?? 'Login failed');

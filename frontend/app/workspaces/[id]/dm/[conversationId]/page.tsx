@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { DmHeader } from './components/DmDetail';
 import type { DmConversation, DmParticipant } from '@/lib/types';
 import api from '@/lib/api';
+import PageLoader from '@/components/PageLoader';
 
 export default function DmConversationPage() {
   const { id: workspaceId, conversationId } = useParams<{
@@ -38,11 +39,7 @@ export default function DmConversationPage() {
   }, [conversationId, workspaceId]);
 
   if (loading) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-indigo-600" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!conversation) {

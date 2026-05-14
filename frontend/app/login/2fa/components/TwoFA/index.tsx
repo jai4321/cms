@@ -44,7 +44,7 @@ export default function TwoFAForm() {
       const meResp = await api.get('/auth/me', {
         headers: { Authorization: `Bearer ${data.accessToken}` },
       });
-      setAuth(meResp.data, data.accessToken, data.refreshToken);
+      setAuth(meResp.data, data.accessToken);
       router.push('/');
     } catch (err: any) {
       setServerError(err?.response?.data?.message ?? 'Verification failed');

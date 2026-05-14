@@ -6,8 +6,11 @@ import {
   HttpStatus,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { TwoFactorService } from './two-factor.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -28,12 +31,39 @@ import {
 import type { User } from '../db/schema';
 import { toSafeUser } from './auth.service';
 
+const REFRESH_COOKIE_NAME = 'refresh_token';
+const REFRESH_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
 @Controller('auth')
 export class AuthController {
+  private readonly isProduction: boolean;
+
   constructor(
     private readonly authService: AuthService,
     private readonly twoFactorService: TwoFactorService,
-  ) {}
+    private readonly config: ConfigService,
+  ) {
+    this.isProduction = this.config.get<string>('NODE_ENV') === 'production';
+  }
+
+  private setRefreshCookie(res: Response, token: string): void {
+    res.cookie(REFRESH_COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: this.isProduction,
+      sameSite: 'strict',
+      maxAge: REFRESH_COOKIE_MAX_AGE_MS,
+      path: '/',
+    });
+  }
+
+  private clearRefreshCookie(res: Response): void {
+    res.clearCookie(REFRESH_COOKIE_NAME, {
+      httpOnly: true,
+      secure: this.isProduction,
+      sameSite: 'strict',
+      path: '/',
+    });
+  }
 
   // ─── Registration & email verification ───────────────────────────────────────
 
@@ -51,21 +81,38 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.login(dto);
+    if (result.refreshToken) {
+      this.setRefreshCookie(res, result.refreshToken);
+    }
+    const { refreshToken: _, ...body } = result;
+    return body;
   }
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshTokenGuard)
-  refresh(@CurrentUser() user: User) {
-    return this.authService.refresh(user);
+  async refresh(
+    @CurrentUser() user: User,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.refresh(user);
+    this.setRefreshCookie(res, result.refreshToken);
+    return { accessToken: result.accessToken };
   }
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
-  logout(@CurrentUser() user: User) {
+  async logout(
+    @CurrentUser() user: User,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    this.clearRefreshCookie(res);
     return this.authService.logout(user.id);
   }
 
@@ -101,21 +148,27 @@ export class AuthController {
   @Post('2fa/verify')
   @HttpCode(HttpStatus.OK)
   @UseGuards(PreAuthGuard)
-  verify2FA(
+  async verify2FA(
     @CurrentUser() preAuthUser: { id: string; email: string },
     @Body() dto: Verify2FADto,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    return this.twoFactorService.verify(preAuthUser.id, dto.code);
+    const result = await this.twoFactorService.verify(preAuthUser.id, dto.code);
+    this.setRefreshCookie(res, result.refreshToken);
+    return { accessToken: result.accessToken };
   }
 
   @Post('2fa/backup')
   @HttpCode(HttpStatus.OK)
   @UseGuards(PreAuthGuard)
-  useBackupCode(
+  async useBackupCode(
     @CurrentUser() preAuthUser: { id: string; email: string },
     @Body() dto: UseBackupCodeDto,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    return this.twoFactorService.useBackupCode(preAuthUser.id, dto.code);
+    const result = await this.twoFactorService.useBackupCode(preAuthUser.id, dto.code);
+    this.setRefreshCookie(res, result.refreshToken);
+    return { accessToken: result.accessToken };
   }
 
   @Post('2fa/disable')

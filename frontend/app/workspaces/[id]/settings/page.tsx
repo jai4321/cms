@@ -7,6 +7,7 @@ import { useWorkspaceStore } from '@/store/workspace.store';
 import { useAuthStore } from '@/store/auth.store';
 import { GeneralSection, InviteSection, MembersSection } from './components/WorkspaceSettings';
 import type { Workspace, WorkspaceMember } from '@/lib/types';
+import PageLoader from '@/components/PageLoader';
 
 export default function WorkspaceSettingsPage() {
   const { id } = useParams<{ id: string }>();
@@ -50,11 +51,7 @@ export default function WorkspaceSettingsPage() {
   }, [id]);
 
   if (loading || !workspace) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-indigo-600" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (
