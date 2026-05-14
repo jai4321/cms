@@ -17,6 +17,19 @@ export class CreateDmDto {
   @ArrayMinSize(1)
   @IsUUID('4', { each: true })
   userIds: string[];
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  name?: string;
+}
+
+export class RenameGroupDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  name: string;
 }
 
 export class AddParticipantDto {

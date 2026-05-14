@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronDown, Plus, Settings } from 'lucide-react';
 import { useWorkspaceStore } from '@/store/workspace.store';
 import { useAuthStore } from '@/store/auth.store';
+import { useChatDockStore } from '@/store/chat-dock.store';
 import type { Workspace } from '@/lib/types';
 import api from '@/lib/api';
 
@@ -16,6 +17,7 @@ export default function WorkspaceSwitcher() {
   const { workspaces, activeWorkspace, setWorkspaces, setActiveWorkspace, setWorkspacesFetched } =
     useWorkspaceStore();
   const { logout } = useAuthStore();
+  const { closeAll } = useChatDockStore();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -46,8 +48,10 @@ export default function WorkspaceSwitcher() {
   }, []);
 
   const handleSelect = (ws: Workspace) => {
-    setActiveWorkspace(ws);
     setOpen(false);
+    if(ws.id === activeWorkspace?.id) return;
+    closeAll();
+    setActiveWorkspace(ws);
     router.push(`/workspaces/${ws.id}/settings`);
   };
 

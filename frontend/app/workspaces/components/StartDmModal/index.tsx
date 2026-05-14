@@ -9,7 +9,6 @@ import type { WorkspaceMember, DmConversation } from '@/lib/types';
 import api from '@/lib/api';
 
 interface Props {
-  open: boolean;
   onClose: () => void;
 }
 
@@ -37,7 +36,7 @@ function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }
   );
 }
 
-export default function StartDmModal({ open, onClose }: Props) {
+export default function StartDmModal({ onClose }: Props) {
   const { user } = useAuthStore();
   const { activeWorkspace } = useWorkspaceStore();
   const { openDm } = useChatDockStore();
@@ -45,12 +44,13 @@ export default function StartDmModal({ open, onClose }: Props) {
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<string[]>([]);
+  const [groupName, setGroupName] = useState('');
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch members when modal opens
+  // Fetch members on mount
   useEffect(() => {
-    if (!open || !activeWorkspace) return;
+    if (!activeWorkspace) return;
     api
       .get<WorkspaceMember[]>(`/workspaces/${activeWorkspace.id}/members`)
       .then((res) => {
@@ -58,16 +58,12 @@ export default function StartDmModal({ open, onClose }: Props) {
         setMembers(res.data.filter((m) => m.user.id !== user?.id));
       })
       .catch(() => {});
-  }, [open, activeWorkspace?.id]);
+  }, [activeWorkspace?.id]);
 
-  // Focus input when opens
+  // Focus input on mount
   useEffect(() => {
-    if (open) {
-      setQuery('');
-      setSelected([]);
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
-  }, [open]);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  }, []);
 
   const filtered = members.filter(
     (m) =>
@@ -85,17 +81,25 @@ export default function StartDmModal({ open, onClose }: Props) {
 
   const handleOpen = async () => {
     if (!activeWorkspace || selected.length === 0) return;
+    if (selected.length >= 2 && !groupName.trim()) return;
     setLoading(true);
     try {
+      const body: { userIds: string[]; name?: string } = { userIds: selected };
+      if (selected.length >= 2) {
+        body.name = groupName.trim();
+      }
       const res = await api.post<DmConversation>(
         `/workspaces/${activeWorkspace.id}/dm`,
-        { userIds: selected },
+        body,
       );
       const conversation = res.data;
       openDm({
         conversationId: conversation.id,
         participants: conversation.participants ?? [],
         workspaceId: activeWorkspace.id,
+        name: conversation.name ?? null,
+        createdBy: conversation.createdBy ?? null,
+        createdAt: conversation.createdAt,
       });
       onClose();
     } catch {
@@ -104,8 +108,6 @@ export default function StartDmModal({ open, onClose }: Props) {
       setLoading(false);
     }
   };
-
-  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -137,6 +139,20 @@ export default function StartDmModal({ open, onClose }: Props) {
             />
           </div>
         </div>
+
+        {/* Group name — required when 2+ people selected */}
+        {selected.length >= 2 && (
+          <div className="border-b border-slate-100 px-4 py-3">
+            <input
+              type="text"
+              placeholder="Group name (required)"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              maxLength={100}
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
+        )}
 
         {/* Member list */}
         <ul className="max-h-64 overflow-y-auto py-2">
@@ -189,7 +205,7 @@ export default function StartDmModal({ open, onClose }: Props) {
           </span>
           <button
             onClick={handleOpen}
-            disabled={selected.length === 0 || loading}
+            disabled={selected.length === 0 || loading || (selected.length >= 2 && !groupName.trim())}
             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
           >
             {loading ? 'Opening…' : 'Open Chat'}

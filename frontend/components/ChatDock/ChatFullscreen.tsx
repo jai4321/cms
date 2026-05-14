@@ -1,12 +1,15 @@
 'use client';
 
-import { Minus, X } from 'lucide-react';
+import { useState } from 'react';
+import { Minus, X, Info } from 'lucide-react';
 import { useChatDockStore, type ChatBox } from '@/store/chat-dock.store';
 import { useAuthStore } from '@/store/auth.store';
+import { useWorkspaceStore } from '@/store/workspace.store';
 import { useConversation } from '@/hooks/useConversation';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
-import type { User } from '@/lib/types';
+import GroupInfoPanel from '@/app/workspaces/[id]/dm/[conversationId]/components/DmDetail/GroupInfoPanel';
+import type { DmConversation, User } from '@/lib/types';
 
 function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
   const initials = name
@@ -54,6 +57,8 @@ function ChatFullscreenInner({
   setFullscreen: (id: string | null) => void;
   closeDm: (id: string) => void;
 }) {
+  const { activeWorkspace } = useWorkspaceStore();
+  const { updateBox } = useChatDockStore();
   const {
     messages,
     isLoading,
@@ -65,9 +70,11 @@ function ChatFullscreenInner({
     emitTyping,
   } = useConversation(box.conversationId);
 
+  const [infoOpen, setInfoOpen] = useState(false);
+
   const others = box.participants.filter((p) => p.userId !== user.id);
-  const label =
-    others.length === 0 ? 'You (yourself)' : others.map((p) => p.username).join(', ');
+  const isGroup = others.length >= 2;
+  const label = box.name || (others.length === 0 ? 'You (yourself)' : others.map((p) => p.username).join(', '));
 
   const typingLabel =
     typingUsers.length === 0
@@ -76,67 +83,119 @@ function ChatFullscreenInner({
         ? `${typingUsers[0].username} is typing…`
         : `${typingUsers.length} people are typing…`;
 
+  // Build a DmConversation shape for GroupInfoPanel from box data
+  const conversation: DmConversation = {
+    id: box.conversationId,
+    workspaceId: box.workspaceId,
+    name: box.name,
+    createdBy: box.createdBy,
+    createdAt: box.createdAt ?? new Date().toISOString(),
+    participants: box.participants,
+  };
+
+  const handleConversationUpdate = (updated: Partial<DmConversation>) => {
+    updateBox(box.conversationId, {
+      ...(updated.name !== undefined ? { name: updated.name } : {}),
+      ...(updated.participants !== undefined ? { participants: updated.participants } : {}),
+    });
+  };
+
+  const handleLeave = () => {
+    closeDm(box.conversationId);
+    setFullscreen(null);
+  };
+
   return (
-    <div className="absolute inset-0 z-50 flex flex-col bg-white">
-      {/* Header */}
-      <div className="flex shrink-0 items-center gap-4 border-b border-slate-200 bg-white px-6 py-4">
-        <div className="flex -space-x-2">
-          {(others.length > 0 ? others : box.participants).slice(0, 4).map((p) => (
-            <span key={p.userId} className="rounded-full ring-2 ring-white">
-              <Avatar name={p.username} avatarUrl={p.avatarUrl} />
-            </span>
-          ))}
+    <div className="absolute inset-0 z-50 flex bg-white">
+      {/* Main chat area */}
+      <div className="flex flex-1 flex-col">
+        {/* Header */}
+        <div className="flex shrink-0 items-center gap-4 border-b border-slate-200 bg-white px-6 py-4">
+          <div className="flex shrink-0">
+            {box.name ? (
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
+                {box.name.split(' ').filter(Boolean).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()}
+              </span>
+            ) : (
+              <div className="flex -space-x-2">
+                {(others.length > 0 ? others : box.participants).slice(0, 4).map((p) => (
+                  <span key={p.userId} className="rounded-full ring-2 ring-white">
+                    <Avatar name={p.username} avatarUrl={p.avatarUrl} />
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-lg font-semibold text-slate-900">{label}</h2>
+            {typingLabel ? (
+              <p className="text-sm italic text-slate-500">{typingLabel}</p>
+            ) : isGroup ? (
+              <p className="text-sm text-slate-500">{box.participants.length} participants</p>
+            ) : null}
+          </div>
+
+          <div className="flex items-center gap-1">
+            {isGroup && (
+              <button
+                onClick={() => setInfoOpen((v) => !v)}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                title="Group info"
+              >
+                <Info className="h-5 w-5" />
+              </button>
+            )}
+            <button
+              onClick={() => setFullscreen(null)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+              title="Minimize to dock"
+            >
+              <Minus className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => {
+                closeDm(box.conversationId);
+                setFullscreen(null);
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
+              title="Close conversation"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
-        <div className="min-w-0 flex-1">
-          <h2 className="truncate text-lg font-semibold text-slate-900">{label}</h2>
-          {typingLabel ? (
-            <p className="text-sm italic text-slate-500">{typingLabel}</p>
-          ) : others.length > 1 ? (
-            <p className="text-sm text-slate-500">{others.length + 1} participants</p>
-          ) : null}
-        </div>
-
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setFullscreen(null)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
-            title="Minimize to dock"
-          >
-            <Minus className="h-5 w-5" />
-          </button>
-          <button
-            onClick={() => {
-              closeDm(box.conversationId);
-              setFullscreen(null);
-            }}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
-            title="Close conversation"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Message area */}
-      <MessageList
-        messages={messages}
-        currentUser={user}
-        hasMore={hasMore}
-        isLoadingMore={isLoadingMore}
-        isLoading={isLoading}
-        onLoadMore={loadMore}
-        className="flex-1"
-      />
-
-      {/* Input bar */}
-      <div className="shrink-0 border-t border-slate-200 bg-white px-6 py-4">
-        <MessageInput
-          onSend={sendMessage}
-          onTyping={emitTyping}
-          placeholder={`Message ${label}…`}
+        {/* Message area */}
+        <MessageList
+          messages={messages}
+          currentUser={user}
+          hasMore={hasMore}
+          isLoadingMore={isLoadingMore}
+          isLoading={isLoading}
+          onLoadMore={loadMore}
+          className="flex-1"
         />
+
+        {/* Input bar */}
+        <div className="shrink-0 border-t border-slate-200 bg-white px-6 py-4">
+          <MessageInput
+            onSend={sendMessage}
+            onTyping={emitTyping}
+            placeholder={`Message ${label}…`}
+          />
+        </div>
       </div>
+
+      {/* Group info panel */}
+      {isGroup && infoOpen && (
+        <GroupInfoPanel
+          conversation={conversation}
+          onClose={() => setInfoOpen(false)}
+          onConversationUpdate={handleConversationUpdate}
+          onLeave={handleLeave}
+        />
+      )}
     </div>
   );
 }

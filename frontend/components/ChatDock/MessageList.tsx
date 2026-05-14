@@ -77,7 +77,7 @@ export default function MessageList({
 
       <div className="flex flex-col gap-1 p-3">
         {messages.map((msg) => {
-          const isOwn = msg.senderId === currentUser.id;
+          const isOwn = (msg.senderId ?? msg.sender?.id) === currentUser.id;
           return (
             <div
               key={msg.id}

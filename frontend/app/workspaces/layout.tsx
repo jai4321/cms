@@ -49,10 +49,9 @@ export default function WorkspacesLayout({
       </main>
 
       {/* Start DM modal */}
-      <StartDmModal
-        open={dmModalOpen}
-        onClose={() => setDmModalOpen(false)}
-      />
+      {dmModalOpen && (
+        <StartDmModal onClose={() => setDmModalOpen(false)} />
+      )}
     </div>
   );
 }

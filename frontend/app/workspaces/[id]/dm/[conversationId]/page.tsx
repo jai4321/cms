@@ -1,46 +1,39 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { DmHeader } from './components/DmDetail';
-import type { DmConversation, DmParticipant } from '@/lib/types';
+import { useParams, useRouter } from 'next/navigation';
+import { DmHeader, GroupInfoPanel } from './components/DmDetail';
+import type { DmConversation } from '@/lib/types';
 import api from '@/lib/api';
 import PageLoader from '@/components/PageLoader';
 
 export default function DmConversationPage() {
+  const router = useRouter();
   const { id: workspaceId, conversationId } = useParams<{
     id: string;
     conversationId: string;
   }>();
   const [conversation, setConversation] = useState<DmConversation | null>(null);
   const [loading, setLoading] = useState(true);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   useEffect(() => {
     api
-      .get<
-        { userId: string; username: string; avatarUrl: string | null; joinedAt: string }[]
-      >(`/dm/${conversationId}/participants`)
-      .then((res) => {
-        setConversation({
-          id: conversationId,
-          workspaceId,
-          createdAt: new Date().toISOString(),
-          participants: res.data.map((p) => ({
-            userId: p.userId,
-            username: p.username,
-            avatarUrl: p.avatarUrl,
-          })),
-        });
-      })
-      .catch(() => {
-        setConversation(null);
-      })
+      .get<DmConversation>(`/dm/${conversationId}`)
+      .then((res) => setConversation(res.data))
+      .catch(() => setConversation(null))
       .finally(() => setLoading(false));
-  }, [conversationId, workspaceId]);
+  }, [conversationId]);
 
-  if (loading) {
-    return <PageLoader />;
-  }
+  const handleConversationUpdate = (updated: Partial<DmConversation>) => {
+    setConversation((prev) => prev ? { ...prev, ...updated } : prev);
+  };
+
+  const handleLeave = () => {
+    router.replace(`/workspaces/${workspaceId}`);
+  };
+
+  if (loading) return <PageLoader />;
 
   if (!conversation) {
     return (
@@ -50,13 +43,31 @@ export default function DmConversationPage() {
     );
   }
 
+  const isGroup = conversation.participants.length >= 3;
+
   return (
-    <div className="flex flex-1 flex-col">
-      <DmHeader conversation={conversation} />
-      {/* Message area — Phase 4 will populate this */}
-      <div className="flex flex-1 items-center justify-center text-slate-400 text-sm">
-        Messages coming in Phase 4
+    <div className="flex flex-1 overflow-hidden">
+      {/* Main area */}
+      <div className="flex flex-1 flex-col">
+        <DmHeader
+          conversation={conversation}
+          onToggleInfo={isGroup ? () => setInfoOpen((v) => !v) : undefined}
+        />
+        {/* Message area — Phase 4 will populate this */}
+        <div className="flex flex-1 items-center justify-center text-slate-400 text-sm">
+          Messages coming in Phase 4
+        </div>
       </div>
+
+      {/* Group info panel */}
+      {isGroup && infoOpen && (
+        <GroupInfoPanel
+          conversation={conversation}
+          onClose={() => setInfoOpen(false)}
+          onConversationUpdate={handleConversationUpdate}
+          onLeave={handleLeave}
+        />
+      )}
     </div>
   );
 }

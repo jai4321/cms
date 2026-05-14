@@ -15,6 +15,27 @@ interface Props {
   onStartDm: () => void;
 }
 
+function groupInitials(name: string) {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+}
+
+function GroupAvatar({ name, size = 'sm' }: { name: string; size?: 'sm' | 'xs' }) {
+  const sizeClass = size === 'xs' ? 'h-5 w-5 text-[10px]' : 'h-7 w-7 text-xs';
+  return (
+    <span
+      className={`${sizeClass} flex shrink-0 items-center justify-center rounded-md bg-indigo-600 font-bold text-white`}
+    >
+      {groupInitials(name)}
+    </span>
+  );
+}
+
 function Avatar({
   name,
   avatarUrl,
@@ -52,6 +73,7 @@ function Avatar({
 }
 
 function dmLabel(conversation: DmConversation, currentUserId: string): string {
+  if (conversation.name) return conversation.name;
   const others = conversation.participants.filter(
     (p) => p.userId !== currentUserId,
   );
@@ -89,6 +111,9 @@ export default function DirectMessagesList({ onStartDm }: Props) {
       conversationId: conversation.id,
       participants: conversation.participants,
       workspaceId: activeWorkspace.id,
+      name: conversation.name ?? null,
+      createdBy: conversation.createdBy ?? null,
+      createdAt: conversation.createdAt,
     });
   };
 
@@ -131,27 +156,25 @@ export default function DirectMessagesList({ onStartDm }: Props) {
                 onClick={() => handleOpen(conv)}
                 className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-100 transition-colors"
               >
-                {/* Avatars: show up to 2 */}
+                {/* Avatar */}
                 <div className="relative flex shrink-0">
-                  {others.slice(0, 2).map((p, i) => (
-                    <span
-                      key={p.userId}
-                      className={i === 1 ? '-ml-2' : ''}
-                      style={{ zIndex: 2 - i }}
-                    >
-                      <Avatar
-                        name={p.username}
-                        avatarUrl={p.avatarUrl}
-                        size="sm"
-                      />
-                    </span>
-                  ))}
-                  {others.length === 0 && (
-                    <Avatar
-                      name={user.username}
-                      avatarUrl={user.avatarUrl}
-                      size="sm"
-                    />
+                  {conv.name ? (
+                    <GroupAvatar name={conv.name} size="sm" />
+                  ) : (
+                    <>
+                      {others.slice(0, 2).map((p, i) => (
+                        <span
+                          key={p.userId}
+                          className={i === 1 ? '-ml-2' : ''}
+                          style={{ zIndex: 2 - i }}
+                        >
+                          <Avatar name={p.username} avatarUrl={p.avatarUrl} size="sm" />
+                        </span>
+                      ))}
+                      {others.length === 0 && (
+                        <Avatar name={user.username} avatarUrl={user.avatarUrl} size="sm" />
+                      )}
+                    </>
                   )}
                 </div>
                 <span className="min-w-0 flex-1 truncate text-left">

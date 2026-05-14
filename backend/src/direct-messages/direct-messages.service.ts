@@ -3,6 +3,7 @@ import {
   Inject,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { eq, and, inArray, lt, desc, isNull } from 'drizzle-orm';
 import { DRIZZLE } from '../db/drizzle.module';
@@ -10,12 +11,14 @@ import type { DrizzleClient } from '../db/drizzle.client';
 import {
   directMessageConversations,
   dmParticipants,
+  workspaceMembers,
   users,
   messages,
 } from '../db/schema';
 import {
   CreateDmDto,
   AddParticipantDto,
+  RenameGroupDto,
   SendMessageDto,
   GetMessagesDto,
 } from './dto/direct-message.dto';
@@ -80,12 +83,7 @@ export class DirectMessagesService {
         const sorted = [...participants].sort();
         const targetSorted = [...allUserIds].sort();
         if (sorted.every((id, i) => id === targetSorted[i])) {
-          const [existing] = await this.db
-            .select()
-            .from(directMessageConversations)
-            .where(eq(directMessageConversations.id, convoId))
-            .limit(1);
-          return existing;
+          return this.getConversation(convoId);
         }
       }
     }
@@ -93,7 +91,11 @@ export class DirectMessagesService {
     // Create new conversation
     const [conversation] = await this.db
       .insert(directMessageConversations)
-      .values({ workspaceId })
+      .values({
+        workspaceId,
+        name: dto.name ?? null,
+        createdBy: currentUserId,
+      })
       .returning();
 
     await this.db.insert(dmParticipants).values(
@@ -103,7 +105,102 @@ export class DirectMessagesService {
       })),
     );
 
-    return conversation;
+    return this.getConversation(conversation.id);
+  }
+
+  // ─── Rename group DM ──────────────────────────────────────────────────────────
+
+  async renameGroup(
+    conversationId: string,
+    dto: RenameGroupDto,
+    requestingUserId: string,
+  ) {
+    const [conversation] = await this.db
+      .select()
+      .from(directMessageConversations)
+      .where(eq(directMessageConversations.id, conversationId))
+      .limit(1);
+
+    if (!conversation) throw new NotFoundException('Conversation not found');
+
+    // Allow if creator OR workspace admin/owner
+    const isCreator = conversation.createdBy === requestingUserId;
+    if (!isCreator) {
+      const [membership] = await this.db
+        .select({ role: workspaceMembers.role })
+        .from(workspaceMembers)
+        .where(
+          and(
+            eq(workspaceMembers.workspaceId, conversation.workspaceId),
+            eq(workspaceMembers.userId, requestingUserId),
+          ),
+        )
+        .limit(1);
+
+      if (!membership || !['owner', 'admin'].includes(membership.role)) {
+        throw new ForbiddenException('Only the creator or an admin can rename this group');
+      }
+    }
+
+    const [updated] = await this.db
+      .update(directMessageConversations)
+      .set({ name: dto.name })
+      .where(eq(directMessageConversations.id, conversationId))
+      .returning();
+
+    return updated;
+  }
+
+  // ─── Leave group DM ───────────────────────────────────────────────────────────
+
+  async leaveGroup(conversationId: string, userId: string) {
+    await this.db
+      .delete(dmParticipants)
+      .where(
+        and(
+          eq(dmParticipants.conversationId, conversationId),
+          eq(dmParticipants.userId, userId),
+        ),
+      );
+
+    // If no participants remain, delete the conversation
+    const remaining = await this.db
+      .select({ id: dmParticipants.id })
+      .from(dmParticipants)
+      .where(eq(dmParticipants.conversationId, conversationId))
+      .limit(1);
+
+    if (remaining.length === 0) {
+      await this.db
+        .delete(directMessageConversations)
+        .where(eq(directMessageConversations.id, conversationId));
+    }
+
+    return { success: true };
+  }
+
+  // ─── Get single conversation with participants ─────────────────────────────────
+
+  async getConversation(conversationId: string) {
+    const [conversation] = await this.db
+      .select()
+      .from(directMessageConversations)
+      .where(eq(directMessageConversations.id, conversationId))
+      .limit(1);
+
+    if (!conversation) throw new NotFoundException('Conversation not found');
+
+    const participantRows = await this.db
+      .select({
+        userId: users.id,
+        username: users.username,
+        avatarUrl: users.avatarUrl,
+      })
+      .from(dmParticipants)
+      .innerJoin(users, eq(dmParticipants.userId, users.id))
+      .where(eq(dmParticipants.conversationId, conversationId));
+
+    return { ...conversation, participants: participantRows };
   }
 
   // ─── List DM conversations for user in a workspace ───────────────────────────

@@ -7,6 +7,9 @@ export interface ChatBox {
   unreadCount: number;
   participants: DmParticipant[];
   workspaceId: string;
+  name?: string | null;
+  createdBy?: string | null;
+  createdAt?: string;
 }
 
 interface ChatDockState {
@@ -14,8 +17,10 @@ interface ChatDockState {
   fullscreenConversationId: string | null;
   openDm: (box: Omit<ChatBox, 'minimized' | 'unreadCount'>) => void;
   closeDm: (conversationId: string) => void;
+  closeAll: () => void;
   toggleMinimize: (conversationId: string) => void;
   setFullscreen: (conversationId: string | null) => void;
+  updateBox: (conversationId: string, patch: Partial<ChatBox>) => void;
   incrementUnread: (conversationId: string) => void;
   clearUnread: (conversationId: string) => void;
 }
@@ -65,6 +70,8 @@ export const useChatDockStore = create<ChatDockState>()((set) => ({
           : state.fullscreenConversationId,
     })),
 
+  closeAll: () => set({ openBoxes: [], fullscreenConversationId: null }),
+
   toggleMinimize: (conversationId) =>
     set((state) => ({
       openBoxes: state.openBoxes.map((b) =>
@@ -76,6 +83,13 @@ export const useChatDockStore = create<ChatDockState>()((set) => ({
 
   setFullscreen: (conversationId) =>
     set({ fullscreenConversationId: conversationId }),
+
+  updateBox: (conversationId, patch) =>
+    set((state) => ({
+      openBoxes: state.openBoxes.map((b) =>
+        b.conversationId === conversationId ? { ...b, ...patch } : b,
+      ),
+    })),
 
   incrementUnread: (conversationId) =>
     set((state) => ({

@@ -42,6 +42,8 @@ export interface DmParticipant {
 export interface DmConversation {
   id: string;
   workspaceId: string;
+  name?: string | null;
+  createdBy?: string | null;
   createdAt: string;
   participants: DmParticipant[];
 }

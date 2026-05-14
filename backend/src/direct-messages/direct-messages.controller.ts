@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -17,6 +19,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import {
   CreateDmDto,
   AddParticipantDto,
+  RenameGroupDto,
   SendMessageDto,
   GetMessagesDto,
 } from './dto/direct-message.dto';
@@ -60,6 +63,36 @@ export class DmsController {
   constructor(
     private readonly directMessagesService: DirectMessagesService,
   ) {}
+
+  // GET /dm/:conversationId
+  @Get()
+  getConversation(@Param('conversationId') conversationId: string) {
+    return this.directMessagesService.getConversation(conversationId);
+  }
+
+  // PATCH /dm/:conversationId/name
+  @Patch('name')
+  renameGroup(
+    @Param('conversationId') conversationId: string,
+    @CurrentUser() user: User,
+    @Body() dto: RenameGroupDto,
+  ) {
+    return this.directMessagesService.renameGroup(
+      conversationId,
+      dto,
+      user.id,
+    );
+  }
+
+  // DELETE /dm/:conversationId/leave
+  @Delete('leave')
+  @HttpCode(HttpStatus.OK)
+  leaveGroup(
+    @Param('conversationId') conversationId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.directMessagesService.leaveGroup(conversationId, user.id);
+  }
 
   // POST /dm/:conversationId/participants
   @Post('participants')
