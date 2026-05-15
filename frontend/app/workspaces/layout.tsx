@@ -31,19 +31,19 @@ export default function WorkspacesLayout({
   if (!isAuthenticated) return null;
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="flex h-screen overflow-hidden bg-slate-100">
       <SocketManager />
-      {/* Left sidebar */}
-      <aside className="flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
+      {/* Left sidebar — fixed height, inner list scrolls */}
+      <aside className="flex h-full w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
         <WorkspaceSwitcher />
-        <div className="mt-2 flex-1 overflow-y-auto">
+        <div className="mt-2 min-h-0 flex-1 overflow-y-auto">
           <DirectMessagesList onStartDm={() => setDmModalOpen(true)} />
         </div>
         <SidebarUserFooter />
       </aside>
 
       {/* Main content — relative so ChatFullscreen is scoped here */}
-      <main className="relative flex min-w-0 flex-1 flex-col">
+      <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
         <ChatFullscreen />
         {children}
       </main>

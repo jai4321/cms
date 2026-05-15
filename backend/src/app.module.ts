@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { WorkspacesModule } from './workspaces/workspaces.module';
 import { DirectMessagesModule } from './direct-messages/direct-messages.module';
 import { ChatModule } from './chat/chat.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ChatModule } from './chat/chat.module';
     WorkspacesModule,
     DirectMessagesModule,
     ChatModule,
+    MessagesModule,
   ],
 })
 export class AppModule {}

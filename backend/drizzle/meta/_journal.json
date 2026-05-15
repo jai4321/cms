@@ -36,6 +36,13 @@
       "when": 1778751279350,
       "tag": "0004_closed_mephisto",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1778839638598,
+      "tag": "0005_tough_nextwave",
+      "breakpoints": true
     }
   ]
 }

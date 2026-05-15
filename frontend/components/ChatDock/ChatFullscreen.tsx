@@ -9,7 +9,8 @@ import { useConversation } from '@/hooks/useConversation';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import GroupInfoPanel from './GroupInfoPanel';
-import type { DmConversation, User } from '@/lib/types';
+import ThreadPanel from './ThreadPanel';
+import type { DmConversation, Message, User } from '@/lib/types';
 import Avatar from '@/components/Avatar';
 
 export default function ChatFullscreen() {
@@ -55,6 +56,7 @@ function ChatFullscreenInner({
   } = useConversation(box.conversationId);
 
   const [infoOpen, setInfoOpen] = useState(false);
+  const [threadMessage, setThreadMessage] = useState<Message | null>(null);
 
   const others = box.participants.filter((p) => p.userId !== user.id);
   const isGroup = others.length >= 2;
@@ -158,6 +160,7 @@ function ChatFullscreenInner({
           isLoadingMore={isLoadingMore}
           isLoading={isLoading}
           onLoadMore={loadMore}
+          onReply={setThreadMessage}
           className="flex-1"
         />
 
@@ -167,9 +170,18 @@ function ChatFullscreenInner({
             onSend={sendMessage}
             onTyping={emitTyping}
             placeholder={`Message ${label}…`}
+            workspaceId={box.workspaceId}
           />
         </div>
       </div>
+
+      {/* Thread panel */}
+      {threadMessage && (
+        <ThreadPanel
+          parentMessage={threadMessage}
+          onClose={() => setThreadMessage(null)}
+        />
+      )}
 
       {/* Group info panel */}
       {isGroup && infoOpen && (

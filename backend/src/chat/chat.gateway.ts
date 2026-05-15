@@ -59,6 +59,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       (client as AuthenticatedSocket).userId = payload.sub;
 
+      // Join personal room for direct notifications (mentions, etc.)
+      await client.join(`user:${payload.sub}`);
+
       // Join all DM rooms for this user
       await this.joinUserRooms(client as AuthenticatedSocket);
 
@@ -136,16 +139,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!participant) throw new WsException('Not a participant');
 
     const dto: SendMessageDto = { content: data.content.trim() };
-    const message = await this.dmService.sendMessage(
+    const result = await this.dmService.sendMessage(
       data.conversationId,
       client.userId,
       dto,
     );
 
     // Broadcast to all room members (including sender)
-    this.server.to(`dm:${data.conversationId}`).emit('message:new', message);
+    this.server.to(`dm:${data.conversationId}`).emit('message:new', result);
 
-    return message;
+    // Emit mention notifications to mentioned users
+    for (const uid of result.mentionedUserIds) {
+      this.server.to(`user:${uid}`).emit('mention:notify', {
+        messageId: result.id,
+        conversationId: data.conversationId,
+        mentionedBy: { id: client.userId },
+        content: result.content,
+      });
+    }
+
+    return result;
   }
 
   // ─── Typing indicator (ephemeral, no DB write) ────────────────────────────────

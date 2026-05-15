@@ -14,6 +14,7 @@ import {
   workspaceMembers,
   users,
   messages,
+  mentions,
 } from '../db/schema';
 import {
   CreateDmDto,
@@ -325,13 +326,40 @@ export class DirectMessagesService {
     return rows;
   }
 
+  // ─── Parse @username mentions from content ──────────────────────────────────
+
+  async parseMentionUserIds(content: string): Promise<string[]> {
+    const pattern = /@([a-zA-Z0-9_]+)/g;
+    const usernames = new Set<string>();
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(content)) !== null) {
+      usernames.add(match[1].toLowerCase());
+    }
+    if (usernames.size === 0) return [];
+    const rows = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(inArray(users.username, [...usernames]));
+    return rows.map((r) => r.id);
+  }
+
   // ─── Send a message ───────────────────────────────────────────────────────────
 
   async sendMessage(
     conversationId: string,
     senderId: string,
     dto: SendMessageDto,
-  ) {
+  ): Promise<{
+    id: string;
+    conversationId: string;
+    senderId: string;
+    content: string;
+    editedAt: Date | null;
+    deletedAt: Date | null;
+    createdAt: Date;
+    sender: { id: string; username: string; avatarUrl: string | null };
+    mentionedUserIds: string[];
+  }> {
     const [message] = await this.db
       .insert(messages)
       .values({ conversationId, senderId, content: dto.content })
@@ -347,7 +375,16 @@ export class DirectMessagesService {
       .where(eq(users.id, senderId))
       .limit(1);
 
-    return { ...message, sender };
+    // Parse and save @mentions
+    const mentionedUserIds = await this.parseMentionUserIds(dto.content);
+    if (mentionedUserIds.length > 0) {
+      await this.db
+        .insert(mentions)
+        .values(mentionedUserIds.map((uid) => ({ messageId: message.id, mentionedUserId: uid })))
+        .onConflictDoNothing();
+    }
+
+    return { ...message, sender, mentionedUserIds };
   }
 
   // ─── Get message by ID (with sender) ─────────────────────────────────────────

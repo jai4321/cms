@@ -66,3 +66,26 @@ export interface Message {
   _optimistic?: boolean;
 }
 
+export interface ThreadMessage {
+  id: string;
+  parentMessageId: string;
+  content: string;
+  editedAt: string | null;
+  createdAt: string;
+  sender: MessageSender;
+}
+
+export interface Reaction {
+  id: string;
+  emoji: string;
+  createdAt: string;
+  user: { id: string; username: string; avatarUrl?: string | null };
+}
+
+export interface ReactionSummary {
+  emoji: string;
+  count: number;
+  reactedByMe: boolean;
+  userIds: string[];
+}
+
