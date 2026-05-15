@@ -42,6 +42,11 @@ export class SendMessageDto {
   @IsNotEmpty()
   @MaxLength(4000)
   content: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  attachmentIds?: string[];
 }
 
 export class GetMessagesDto {

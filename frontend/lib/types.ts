@@ -54,6 +54,18 @@ export interface MessageSender {
   avatarUrl?: string | null;
 }
 
+export interface Attachment {
+  id: string;
+  messageId: string | null;
+  uploaderId: string;
+  bucket: string;
+  objectKey: string;
+  originalFilename: string;
+  mimeType: string;
+  sizeBytes: number;
+  createdAt: string;
+}
+
 export interface Message {
   id: string;
   conversationId: string;
@@ -63,6 +75,7 @@ export interface Message {
   deletedAt: string | null;
   createdAt: string;
   sender: MessageSender;
+  attachments?: Attachment[];
   _optimistic?: boolean;
 }
 

@@ -43,6 +43,20 @@
       "when": 1778839638598,
       "tag": "0005_tough_nextwave",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778845841536,
+      "tag": "0006_thin_the_santerians",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1778846096565,
+      "tag": "0007_lyrical_epoch",
+      "breakpoints": true
     }
   ]
 }

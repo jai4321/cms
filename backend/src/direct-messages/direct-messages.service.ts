@@ -15,6 +15,7 @@ import {
   users,
   messages,
   mentions,
+  attachments,
 } from '../db/schema';
 import {
   CreateDmDto,
@@ -359,6 +360,7 @@ export class DirectMessagesService {
     createdAt: Date;
     sender: { id: string; username: string; avatarUrl: string | null };
     mentionedUserIds: string[];
+    attachments: (typeof attachments.$inferSelect)[];
   }> {
     const [message] = await this.db
       .insert(messages)
@@ -384,7 +386,28 @@ export class DirectMessagesService {
         .onConflictDoNothing();
     }
 
-    return { ...message, sender, mentionedUserIds };
+    // Link provided attachments to this message
+    if (dto.attachmentIds && dto.attachmentIds.length > 0) {
+      await this.db
+        .update(attachments)
+        .set({ messageId: message.id })
+        .where(
+          and(
+            inArray(attachments.id, dto.attachmentIds),
+            eq(attachments.uploaderId, senderId),
+          ),
+        );
+    }
+
+    // Fetch linked attachments
+    const linkedAttachments = dto.attachmentIds && dto.attachmentIds.length > 0
+      ? await this.db
+          .select()
+          .from(attachments)
+          .where(eq(attachments.messageId, message.id))
+      : [];
+
+    return { ...message, sender, mentionedUserIds, attachments: linkedAttachments };
   }
 
   // ─── Get message by ID (with sender) ─────────────────────────────────────────
@@ -460,6 +483,29 @@ export class DirectMessagesService {
     const items = hasMore ? rows.slice(0, limit) : rows;
     const nextCursor = hasMore ? items[items.length - 1].id : null;
 
-    return { items, nextCursor, hasMore };
+    // Fetch attachments for these messages
+    const messageIds = items.map((m) => m.id);
+    const attachmentRows = messageIds.length > 0
+      ? await this.db
+          .select()
+          .from(attachments)
+          .where(inArray(attachments.messageId, messageIds))
+      : [];
+
+    // Group attachments by messageId
+    const attachmentsByMessage = new Map<string, (typeof attachments.$inferSelect)[]>();
+    for (const att of attachmentRows) {
+      if (!att.messageId) continue;
+      const list = attachmentsByMessage.get(att.messageId) ?? [];
+      list.push(att);
+      attachmentsByMessage.set(att.messageId, list);
+    }
+
+    const itemsWithAttachments = items.map((m) => ({
+      ...m,
+      attachments: attachmentsByMessage.get(m.id) ?? [],
+    }));
+
+    return { items: itemsWithAttachments, nextCursor, hasMore };
   }
 }

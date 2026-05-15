@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { X, Pencil, Check, Plus, Search, LogOut } from 'lucide-react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { X, Pencil, Check, Plus, Search, LogOut, Images } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useWorkspaceStore } from '@/store/workspace.store';
-import type { DmConversation, DmParticipant, WorkspaceMember } from '@/lib/types';
+import { useMessageStore } from '@/store/message.store';
+import type { Attachment, DmConversation, DmParticipant, WorkspaceMember } from '@/lib/types';
 import api from '@/lib/api';
 import Avatar from '@/components/Avatar';
 
@@ -23,6 +24,16 @@ export default function GroupInfoPanel({
 }: Props) {
   const { user } = useAuthStore();
   const { activeWorkspace } = useWorkspaceStore();
+  const { conversations } = useMessageStore();
+
+  // Collect all attachments from loaded messages
+  const sharedMedia = (conversations[conversation.id]?.items ?? [])
+    .flatMap((m) => m.attachments ?? [])
+    .filter((a) => a.mimeType.startsWith('image/'));
+
+  const sharedFiles = (conversations[conversation.id]?.items ?? [])
+    .flatMap((m) => m.attachments ?? [])
+    .filter((a) => !a.mimeType.startsWith('image/'));
 
   // ─── Rename ───────────────────────────────────────────────────────────────────
   const canRename =
@@ -266,6 +277,37 @@ export default function GroupInfoPanel({
             })}
           </ul>
         </section>
+
+        {/* Shared Media */}
+        {sharedMedia.length > 0 && (
+          <section>
+            <div className="mb-2 flex items-center gap-1.5">
+              <Images className="h-3.5 w-3.5 text-slate-400" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Shared Media
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-1">
+              {sharedMedia.map((att) => (
+                <GalleryImage key={att.id} attachment={att} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Shared Files */}
+        {sharedFiles.length > 0 && (
+          <section>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Shared Files
+            </p>
+            <ul className="flex flex-col gap-1">
+              {sharedFiles.map((att) => (
+                <GalleryFileRow key={att.id} attachment={att} />
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
 
       {/* Leave group */}
@@ -280,5 +322,71 @@ export default function GroupInfoPanel({
         </button>
       </div>
     </aside>
+  );
+}
+
+// ─── Gallery helpers ──────────────────────────────────────────────────────────
+
+function GalleryImage({ attachment }: { attachment: Attachment }) {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .get<{ url: string }>(`/attachments/${attachment.id}/url`)
+      .then((res) => setUrl(res.data.url))
+      .catch(() => {});
+  }, [attachment.id]);
+
+  const handleOpen = useCallback(() => {
+    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+  }, [url]);
+
+  return (
+    <button
+      onClick={handleOpen}
+      className="aspect-square overflow-hidden rounded bg-slate-100"
+      title={attachment.originalFilename}
+    >
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt={attachment.originalFilename} className="h-full w-full object-cover" />
+      ) : (
+        <div className="h-full w-full animate-pulse bg-slate-200" />
+      )}
+    </button>
+  );
+}
+
+function GalleryFileRow({ attachment }: { attachment: Attachment }) {
+  const handleDownload = useCallback(async () => {
+    const res = await api.get<{ url: string }>(`/attachments/${attachment.id}/url`);
+    const a = document.createElement('a');
+    a.href = res.data.url;
+    a.download = attachment.originalFilename;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.click();
+  }, [attachment]);
+
+  const sizeLabel =
+    attachment.sizeBytes < 1024 * 1024
+      ? `${(attachment.sizeBytes / 1024).toFixed(1)} KB`
+      : `${(attachment.sizeBytes / 1024 / 1024).toFixed(1)} MB`;
+
+  return (
+    <li>
+      <button
+        onClick={handleDownload}
+        className="flex w-full items-center gap-2 rounded px-1 py-1.5 text-left hover:bg-slate-50 transition-colors"
+      >
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-slate-200 text-[8px] font-bold uppercase text-slate-500">
+          {attachment.originalFilename.split('.').pop()?.slice(0, 4)}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-medium text-slate-700">{attachment.originalFilename}</p>
+          <p className="text-[10px] text-slate-400">{sizeLabel}</p>
+        </div>
+      </button>
+    </li>
   );
 }

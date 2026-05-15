@@ -118,7 +118,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('message:send')
   async handleSendMessage(
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { conversationId: string; content: string },
+    @MessageBody() data: { conversationId: string; content: string; attachmentIds?: string[] },
   ) {
     if (!data.conversationId || !data.content?.trim()) {
       throw new WsException('Invalid payload');
@@ -138,7 +138,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     if (!participant) throw new WsException('Not a participant');
 
-    const dto: SendMessageDto = { content: data.content.trim() };
+    const dto: SendMessageDto = {
+      content: data.content.trim(),
+      attachmentIds: data.attachmentIds,
+    };
     const result = await this.dmService.sendMessage(
       data.conversationId,
       client.userId,

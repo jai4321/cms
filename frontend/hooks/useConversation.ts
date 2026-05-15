@@ -70,14 +70,14 @@ export function useConversation(conversationId: string) {
   }, [conversationId, conv?.hasMore, conv?.isLoadingMore, conv?.nextCursor]);
 
   const sendMessage = useCallback(
-    (content: string) => {
+    (content: string, attachmentIds?: string[]) => {
       if (!user || !accessToken) return;
       const tempId = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       addOptimistic(conversationId, tempId, user.id, user.username, user.avatarUrl ?? null, content);
       const socket = getSocket(accessToken);
       socket.emit(
         'message:send',
-        { conversationId, content },
+        { conversationId, content, attachmentIds },
         (msg: Message) => {
           replaceOptimistic(conversationId, tempId, msg);
         },
