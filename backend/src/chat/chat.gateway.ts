@@ -32,7 +32,7 @@ interface AuthenticatedSocket extends Socket {
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private readonly logger = new Logger(ChatGateway.name);
 
@@ -143,9 +143,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
 
     // Broadcast to all room members (including sender)
-    this.server
-      .to(`dm:${data.conversationId}`)
-      .emit('message:new', message);
+    this.server.to(`dm:${data.conversationId}`).emit('message:new', message);
 
     return message;
   }
@@ -153,7 +151,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // ─── Typing indicator (ephemeral, no DB write) ────────────────────────────────
 
   @SubscribeMessage('message:typing')
-  async handleTyping(
+  handleTyping(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { conversationId: string; isTyping: boolean },
   ) {

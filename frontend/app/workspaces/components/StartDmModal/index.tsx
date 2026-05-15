@@ -7,33 +7,10 @@ import { useAuthStore } from '@/store/auth.store';
 import { useChatDockStore } from '@/store/chat-dock.store';
 import type { WorkspaceMember, DmConversation } from '@/lib/types';
 import api from '@/lib/api';
+import Avatar from '@/components/Avatar';
 
 interface Props {
   onClose: () => void;
-}
-
-function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
-  const initials = name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-
-  if (avatarUrl) {
-    return (
-      <img
-        src={avatarUrl}
-        alt={name}
-        className="h-8 w-8 rounded-full object-cover"
-      />
-    );
-  }
-  return (
-    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-xs font-bold text-white">
-      {initials}
-    </span>
-  );
 }
 
 export default function StartDmModal({ onClose }: Props) {

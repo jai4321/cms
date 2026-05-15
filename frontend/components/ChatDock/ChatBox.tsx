@@ -7,28 +7,10 @@ import { useAuthStore } from '@/store/auth.store';
 import { useConversation } from '@/hooks/useConversation';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
+import Avatar from '@/components/Avatar';
 
 interface Props {
   box: ChatBoxType;
-}
-
-function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
-  const initials = name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-  if (avatarUrl) {
-    return (
-      <img src={avatarUrl} alt={name} className="h-7 w-7 rounded-full object-cover" />
-    );
-  }
-  return (
-    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-xs font-bold text-white">
-      {initials}
-    </span>
-  );
 }
 
 export default function ChatBox({ box }: Props) {
@@ -69,7 +51,7 @@ export default function ChatBox({ box }: Props) {
             <div className="flex -space-x-1.5">
               {(others.length > 0 ? others : box.participants).slice(0, 2).map((p) => (
                 <span key={p.userId} className="rounded-full ring-2 ring-slate-800">
-                  <Avatar name={p.username} avatarUrl={p.avatarUrl} />
+                  <Avatar name={p.username} avatarUrl={p.avatarUrl} size="sm" />
                 </span>
               ))}
             </div>

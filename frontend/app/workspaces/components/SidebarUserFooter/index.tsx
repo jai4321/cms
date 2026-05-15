@@ -6,36 +6,7 @@ import { LogOut, Settings, ChevronUp } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useWorkspaceStore } from '@/store/workspace.store';
 import api from '@/lib/api';
-
-function Avatar({
-  name,
-  avatarUrl,
-}: {
-  name: string;
-  avatarUrl?: string | null;
-}) {
-  const initials = name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-
-  if (avatarUrl) {
-    return (
-      <img
-        src={avatarUrl}
-        alt={name}
-        className="h-8 w-8 rounded-full object-cover ring-2 ring-white"
-      />
-    );
-  }
-  return (
-    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-xs font-bold text-white ring-2 ring-white">
-      {initials}
-    </span>
-  );
-}
+import Avatar from '@/components/Avatar';
 
 export default function SidebarUserFooter() {
   const router = useRouter();
@@ -74,7 +45,7 @@ export default function SidebarUserFooter() {
         <div className="absolute bottom-full left-2 right-2 mb-1 rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl">
           {/* User info header in popup */}
           <div className="flex items-center gap-3 px-4 py-2.5">
-            <Avatar name={user.username} avatarUrl={user.avatarUrl} />
+            <Avatar name={user.username} avatarUrl={user.avatarUrl} className="ring-2 ring-white" />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-slate-900">
                 {user.username}
@@ -113,7 +84,7 @@ export default function SidebarUserFooter() {
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors"
       >
-        <Avatar name={user.username} avatarUrl={user.avatarUrl} />
+        <Avatar name={user.username} avatarUrl={user.avatarUrl} className="ring-2 ring-white" />
         <div className="min-w-0 flex-1 text-left">
           <p className="truncate text-sm font-semibold text-slate-900">
             {user.username}

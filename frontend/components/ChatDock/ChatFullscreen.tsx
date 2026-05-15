@@ -10,23 +10,7 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import GroupInfoPanel from '@/app/workspaces/[id]/dm/[conversationId]/components/DmDetail/GroupInfoPanel';
 import type { DmConversation, User } from '@/lib/types';
-
-function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
-  const initials = name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-  if (avatarUrl) {
-    return <img src={avatarUrl} alt={name} className="h-9 w-9 rounded-full object-cover" />;
-  }
-  return (
-    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-sm font-bold text-white">
-      {initials}
-    </span>
-  );
-}
+import Avatar from '@/components/Avatar';
 
 export default function ChatFullscreen() {
   const { openBoxes, fullscreenConversationId, setFullscreen, closeDm } = useChatDockStore();
@@ -120,7 +104,7 @@ function ChatFullscreenInner({
               <div className="flex -space-x-2">
                 {(others.length > 0 ? others : box.participants).slice(0, 4).map((p) => (
                   <span key={p.userId} className="rounded-full ring-2 ring-white">
-                    <Avatar name={p.username} avatarUrl={p.avatarUrl} />
+                    <Avatar name={p.username} avatarUrl={p.avatarUrl} size="lg" />
                   </span>
                 ))}
               </div>

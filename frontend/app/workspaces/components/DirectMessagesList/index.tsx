@@ -9,6 +9,7 @@ import type { DmConversation } from '@/lib/types';
 import { useMessageStore } from '@/store/message.store';
 
 import api from '@/lib/api';
+import Avatar from '@/components/Avatar';
 
 interface Props {
   onStartDm: () => void;
@@ -31,42 +32,6 @@ function GroupAvatar({ name, size = 'sm' }: { name: string; size?: 'sm' | 'xs' }
       className={`${sizeClass} flex shrink-0 items-center justify-center rounded-md bg-indigo-600 font-bold text-white`}
     >
       {groupInitials(name)}
-    </span>
-  );
-}
-
-function Avatar({
-  name,
-  avatarUrl,
-  size = 'sm',
-}: {
-  name: string;
-  avatarUrl?: string | null;
-  size?: 'sm' | 'xs';
-}) {
-  const initials = name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-
-  const sizeClass = size === 'xs' ? 'h-5 w-5 text-[10px]' : 'h-7 w-7 text-xs';
-
-  if (avatarUrl) {
-    return (
-      <img
-        src={avatarUrl}
-        alt={name}
-        className={`${sizeClass} rounded-full object-cover`}
-      />
-    );
-  }
-  return (
-    <span
-      className={`${sizeClass} flex shrink-0 items-center justify-center rounded-full bg-indigo-500 font-bold text-white`}
-    >
-      {initials}
     </span>
   );
 }
