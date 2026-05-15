@@ -8,7 +8,7 @@ import { useWorkspaceStore } from '@/store/workspace.store';
 import { useConversation } from '@/hooks/useConversation';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
-import GroupInfoPanel from '@/app/workspaces/[id]/dm/[conversationId]/components/DmDetail/GroupInfoPanel';
+import GroupInfoPanel from './GroupInfoPanel';
 import type { DmConversation, User } from '@/lib/types';
 import Avatar from '@/components/Avatar';
 
