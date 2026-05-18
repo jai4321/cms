@@ -33,8 +33,8 @@ export default function WorkspacesLayout({
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100">
       <SocketManager />
-      {/* Left sidebar — fixed height, inner list scrolls */}
-      <aside className="flex h-full w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
+      {/* Left sidebar — fixed height, inner list scrolls. relative+z-30 creates stacking context above main content so notifications/popups layer on top */}
+      <aside className="relative z-30 flex h-full w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
         <WorkspaceSwitcher />
         <div className="mt-2 min-h-0 flex-1 overflow-y-auto">
           <DirectMessagesList onStartDm={() => setDmModalOpen(true)} />

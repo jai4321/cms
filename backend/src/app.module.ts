@@ -9,6 +9,8 @@ import { DirectMessagesModule } from './direct-messages/direct-messages.module';
 import { ChatModule } from './chat/chat.module';
 import { MessagesModule } from './messages/messages.module';
 import { UploadModule } from './upload/upload.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { PresenceModule } from './presence/presence.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { UploadModule } from './upload/upload.module';
     ChatModule,
     MessagesModule,
     UploadModule,
+    NotificationsModule,
+    PresenceModule,
   ],
 })
 export class AppModule {}

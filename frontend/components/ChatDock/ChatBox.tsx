@@ -5,11 +5,13 @@ import { Minus, X, Maximize2 } from 'lucide-react';
 import type { ChatBox as ChatBoxType } from '@/store/chat-dock.store';
 import { useChatDockStore } from '@/store/chat-dock.store';
 import { useAuthStore } from '@/store/auth.store';
+import { usePresenceStore } from '@/store/presence.store';
 import { useConversation } from '@/hooks/useConversation';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import ThreadPanel from './ThreadPanel';
 import Avatar from '@/components/Avatar';
+import PresenceDot from '@/components/PresenceDot';
 import type { Message } from '@/lib/types';
 
 interface Props {
@@ -19,6 +21,7 @@ interface Props {
 export default function ChatBox({ box }: Props) {
   const { toggleMinimize, closeDm, setFullscreen } = useChatDockStore();
   const { user } = useAuthStore();
+  const getStatus = usePresenceStore((s) => s.getStatus);
   const [threadMessage, setThreadMessage] = useState<Message | null>(null);
 
   const { messages, isLoading, isLoadingMore, hasMore, typingUsers, sendMessage, loadMore, emitTyping } =
@@ -55,8 +58,12 @@ export default function ChatBox({ box }: Props) {
             ) : (
               <div className="flex -space-x-1.5">
                 {(others.length > 0 ? others : box.participants).slice(0, 2).map((p) => (
-                  <span key={p.userId} className="rounded-full ring-2 ring-slate-800">
+                  <span key={p.userId} className="relative rounded-full ring-2 ring-slate-800">
                     <Avatar name={p.username} avatarUrl={p.avatarUrl} size="sm" />
+                    <PresenceDot
+                      status={getStatus(p.userId)}
+                      className="absolute -bottom-0.5 -right-0.5"
+                    />
                   </span>
                 ))}
               </div>

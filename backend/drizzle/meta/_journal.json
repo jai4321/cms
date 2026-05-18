@@ -57,6 +57,13 @@
       "when": 1778846096565,
       "tag": "0007_lyrical_epoch",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1779083153594,
+      "tag": "0008_safe_tyger_tiger",
+      "breakpoints": true
     }
   ]
 }

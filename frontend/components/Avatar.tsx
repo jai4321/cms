@@ -1,10 +1,15 @@
 'use client';
 
+import { usePresenceStore } from '@/store/presence.store';
+import PresenceDot from './PresenceDot';
+
 interface AvatarProps {
   name: string;
   avatarUrl?: string | null;
   size?: 'xs' | 'sm' | 'md' | 'lg';
   className?: string;
+  userId?: string;
+  showPresence?: boolean;
 }
 
 const sizeMap = {
@@ -14,7 +19,17 @@ const sizeMap = {
   lg: { box: 'h-9 w-9', text: 'text-sm' },
 };
 
-export default function Avatar({ name, avatarUrl, size = 'md', className = '' }: AvatarProps) {
+export default function Avatar({
+  name,
+  avatarUrl,
+  size = 'md',
+  className = '',
+  userId,
+  showPresence = false,
+}: AvatarProps) {
+  const getStatus = usePresenceStore((s) => s.getStatus);
+  const status = showPresence && userId ? getStatus(userId) : null;
+
   const initials = name
     .split(' ')
     .slice(0, 2)
@@ -24,20 +39,29 @@ export default function Avatar({ name, avatarUrl, size = 'md', className = '' }:
 
   const { box, text } = sizeMap[size];
 
-  if (avatarUrl) {
-    return (
-      <img
-        src={avatarUrl}
-        alt={name}
-        className={`${box} rounded-full object-cover ${className}`}
-      />
-    );
-  }
-  return (
+  const img = avatarUrl ? (
+    <img
+      src={avatarUrl}
+      alt={name}
+      className={`${box} rounded-full object-cover ${className}`}
+    />
+  ) : (
     <span
       className={`${box} ${text} flex shrink-0 items-center justify-center rounded-full bg-indigo-500 font-bold text-white ${className}`}
     >
       {initials}
+    </span>
+  );
+
+  if (!status) return img;
+
+  return (
+    <span className="relative inline-flex shrink-0">
+      {img}
+      <PresenceDot
+        status={status}
+        className="absolute -bottom-0.5 -right-0.5"
+      />
     </span>
   );
 }

@@ -18,7 +18,7 @@ Mark steps done with [x] in the phase file, then update the counts in this table
 | [4](phase-4.md) | Real-time Messaging | 9/9 | 7/7 | 16/16 (100%) | DONE |
 | [5](phase-5.md) | Threads, Reactions, Mentions | 8/8 | 5/5 | 13/13 (100%) | DONE |
 | [6](phase-6.md) | File and Media Attachments | 0/6 | 0/6 | 0/12 (0%) | Not started |
-| [7](phase-7.md) | Presence and Notifications | 0/7 | 0/6 | 0/13 (0%) | Not started |
+| [7](phase-7.md) | Presence and Notifications | 7/7 | 6/6 | 13/13 (100%) | DONE |
 | [8](phase-8.md) | Search | 0/2 | 0/3 | 0/5 (0%) | Not started |
 | [9](phase-9.md) | Channels | 0/12 | 0/4 | 0/16 (0%) | Not started |
 | [10](phase-10.md) | Polish and Production | 0/6 | 0/6 | 0/12 (0%) | Not started |

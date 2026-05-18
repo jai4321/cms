@@ -102,3 +102,16 @@ export interface ReactionSummary {
   userIds: string[];
 }
 
+export type PresenceStatus = 'online' | 'away' | 'offline' | 'dnd';
+
+export type NotificationType = 'mention' | 'thread_reply' | 'dm';
+
+export interface Notification {
+  id: string;
+  recipientId: string;
+  type: NotificationType;
+  payload: Record<string, unknown>;
+  isRead: boolean;
+  createdAt: string;
+}
+

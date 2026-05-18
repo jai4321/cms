@@ -7,6 +7,7 @@ import { ChevronDown, Plus, Settings } from 'lucide-react';
 import { useWorkspaceStore } from '@/store/workspace.store';
 import { useAuthStore } from '@/store/auth.store';
 import { useChatDockStore } from '@/store/chat-dock.store';
+import NotificationBell from '@/components/NotificationBell';
 import type { Workspace } from '@/lib/types';
 import api from '@/lib/api';
 
@@ -65,19 +66,20 @@ export default function WorkspaceSwitcher() {
 
   return (
     <div ref={ref} className="relative px-3 py-3">
-      {/* Trigger */}
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm font-medium hover:bg-slate-100 transition-colors"
-      >
-        {activeWorkspace ? (
-          <>
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-indigo-600 text-xs font-bold text-white">
-              {activeWorkspace.iconUrl ? (
-                <img src={activeWorkspace.iconUrl} alt="" className="h-7 w-7 rounded-md object-cover" />
-              ) : (
-                initials(activeWorkspace.name)
-              )}
+      {/* Trigger row: workspace switcher + notification bell */}
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-2 text-left text-sm font-medium hover:bg-slate-100 transition-colors"
+        >
+          {activeWorkspace ? (
+            <>
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-indigo-600 text-xs font-bold text-white">
+                {activeWorkspace.iconUrl ? (
+                  <img src={activeWorkspace.iconUrl} alt="" className="h-7 w-7 rounded-md object-cover" />
+                ) : (
+                  initials(activeWorkspace.name)
+                )}
             </span>
             <span className="min-w-0 flex-1 truncate">{activeWorkspace.name}</span>
           </>
@@ -85,7 +87,9 @@ export default function WorkspaceSwitcher() {
           <span className="flex-1 text-slate-400">Select workspace…</span>
         )}
         <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
-      </button>
+        </button>
+        <NotificationBell />
+      </div>
 
       {/* Dropdown */}
       {open && (

@@ -92,7 +92,7 @@ function ChatFullscreenInner({
   };
 
   return (
-    <div className="absolute inset-0 z-50 flex bg-white">
+    <div className="absolute inset-0 z-10 flex bg-white">
       {/* Main chat area */}
       <div className="flex flex-1 flex-col">
         {/* Header */}
@@ -164,8 +164,8 @@ function ChatFullscreenInner({
           className="flex-1"
         />
 
-        {/* Input bar */}
-        <div className="shrink-0 border-t border-slate-200 bg-white px-6 py-4">
+        {/* Input bar — pb-16 ensures the fixed chat dock boxes don't cover this area */}
+        <div className="shrink-0 border-t border-slate-200 bg-white px-6 pb-16 pt-4">
           <MessageInput
             onSend={sendMessage}
             onTyping={emitTyping}

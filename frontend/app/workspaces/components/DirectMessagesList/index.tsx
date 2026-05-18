@@ -5,11 +5,14 @@ import { Plus } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useWorkspaceStore } from '@/store/workspace.store';
 import { useChatDockStore } from '@/store/chat-dock.store';
-import type { DmConversation } from '@/lib/types';
+import type { DmConversation, PresenceStatus } from '@/lib/types';
 import { useMessageStore } from '@/store/message.store';
 
 import api from '@/lib/api';
 import Avatar from '@/components/Avatar';
+import PresenceDot from '@/components/PresenceDot';
+import { usePresenceStore } from '@/store/presence.store';
+import { getSocket } from '@/lib/socket';
 
 interface Props {
   onStartDm: () => void;
@@ -46,16 +49,34 @@ function dmLabel(conversation: DmConversation, currentUserId: string): string {
 }
 
 export default function DirectMessagesList({ onStartDm }: Props) {
-  const { user } = useAuthStore();
+  const { user, accessToken } = useAuthStore();
   const { activeWorkspace, conversations, setConversations } = useWorkspaceStore();
   const { openDm, openBoxes } = useChatDockStore();
   const { sidebarUnread } = useMessageStore();
+  const { getStatus, setStatuses } = usePresenceStore();
 
   useEffect(() => {
-    if (!activeWorkspace) return;
+    if (!activeWorkspace || !accessToken) return;
     api
       .get<DmConversation[]>(`/workspaces/${activeWorkspace.id}/dm`)
-      .then((res) => setConversations(res.data))
+      .then((res) => {
+        setConversations(res.data);
+        // Fetch current presence for all participants after conversations load
+        const userIds = [
+          ...new Set(res.data.flatMap((c) => c.participants.map((p) => p.userId))),
+        ];
+        if (userIds.length === 0) return;
+        const socket = getSocket(accessToken);
+        socket.emit(
+          'presence:get',
+          { userIds },
+          (statuses: Record<string, PresenceStatus>) => {
+            if (statuses && typeof statuses === 'object') {
+              setStatuses(statuses);
+            }
+          },
+        );
+      })
       .catch(() => {});
   }, [activeWorkspace?.id]);
 
@@ -119,10 +140,16 @@ export default function DirectMessagesList({ onStartDm }: Props) {
                       {others.slice(0, 2).map((p, i) => (
                         <span
                           key={p.userId}
-                          className={i === 1 ? '-ml-2' : ''}
+                          className={`relative ${i === 1 ? '-ml-2' : ''}`}
                           style={{ zIndex: 2 - i }}
                         >
                           <Avatar name={p.username} avatarUrl={p.avatarUrl} size="sm" />
+                          {others.length === 1 && (
+                            <PresenceDot
+                              status={getStatus(p.userId)}
+                              className="absolute -bottom-0.5 -right-0.5"
+                            />
+                          )}
                         </span>
                       ))}
                       {others.length === 0 && (

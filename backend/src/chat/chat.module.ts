@@ -3,6 +3,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ChatGateway } from './chat.gateway';
 import { DirectMessagesModule } from '../direct-messages/direct-messages.module';
+import { PresenceModule } from '../presence/presence.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { DirectMessagesModule } from '../direct-messages/direct-messages.module'
       inject: [ConfigService],
     }),
     DirectMessagesModule,
+    PresenceModule,
+    NotificationsModule,
   ],
   providers: [ChatGateway],
   exports: [ChatGateway],
