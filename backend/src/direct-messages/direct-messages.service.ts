@@ -47,10 +47,7 @@ export class DirectMessagesService {
       .from(dmParticipants)
       .innerJoin(
         directMessageConversations,
-        eq(
-          dmParticipants.conversationId,
-          directMessageConversations.id,
-        ),
+        eq(dmParticipants.conversationId, directMessageConversations.id),
       )
       .where(
         and(
@@ -140,7 +137,9 @@ export class DirectMessagesService {
         .limit(1);
 
       if (!membership || !['owner', 'admin'].includes(membership.role)) {
-        throw new ForbiddenException('Only the creator or an admin can rename this group');
+        throw new ForbiddenException(
+          'Only the creator or an admin can rename this group',
+        );
       }
     }
 
@@ -216,10 +215,7 @@ export class DirectMessagesService {
       .from(dmParticipants)
       .innerJoin(
         directMessageConversations,
-        eq(
-          dmParticipants.conversationId,
-          directMessageConversations.id,
-        ),
+        eq(dmParticipants.conversationId, directMessageConversations.id),
       )
       .where(
         and(
@@ -272,10 +268,7 @@ export class DirectMessagesService {
 
   // ─── Add participant to group DM ─────────────────────────────────────────────
 
-  async addParticipant(
-    conversationId: string,
-    dto: AddParticipantDto,
-  ) {
+  async addParticipant(conversationId: string, dto: AddParticipantDto) {
     // Check conversation exists
     const [conversation] = await this.db
       .select()
@@ -382,7 +375,12 @@ export class DirectMessagesService {
     if (mentionedUserIds.length > 0) {
       await this.db
         .insert(mentions)
-        .values(mentionedUserIds.map((uid) => ({ messageId: message.id, mentionedUserId: uid })))
+        .values(
+          mentionedUserIds.map((uid) => ({
+            messageId: message.id,
+            mentionedUserId: uid,
+          })),
+        )
         .onConflictDoNothing();
     }
 
@@ -400,14 +398,20 @@ export class DirectMessagesService {
     }
 
     // Fetch linked attachments
-    const linkedAttachments = dto.attachmentIds && dto.attachmentIds.length > 0
-      ? await this.db
-          .select()
-          .from(attachments)
-          .where(eq(attachments.messageId, message.id))
-      : [];
+    const linkedAttachments =
+      dto.attachmentIds && dto.attachmentIds.length > 0
+        ? await this.db
+            .select()
+            .from(attachments)
+            .where(eq(attachments.messageId, message.id))
+        : [];
 
-    return { ...message, sender, mentionedUserIds, attachments: linkedAttachments };
+    return {
+      ...message,
+      sender,
+      mentionedUserIds,
+      attachments: linkedAttachments,
+    };
   }
 
   // ─── Get message by ID (with sender) ─────────────────────────────────────────
@@ -437,7 +441,7 @@ export class DirectMessagesService {
   // ─── Paginated message history ────────────────────────────────────────────────
 
   async getMessages(conversationId: string, dto: GetMessagesDto) {
-    const limit = dto.limit ?? 50;
+    const limit = dto.limit ?? 10;
 
     const conditions = [
       eq(messages.conversationId, conversationId),
@@ -485,15 +489,19 @@ export class DirectMessagesService {
 
     // Fetch attachments for these messages
     const messageIds = items.map((m) => m.id);
-    const attachmentRows = messageIds.length > 0
-      ? await this.db
-          .select()
-          .from(attachments)
-          .where(inArray(attachments.messageId, messageIds))
-      : [];
+    const attachmentRows =
+      messageIds.length > 0
+        ? await this.db
+            .select()
+            .from(attachments)
+            .where(inArray(attachments.messageId, messageIds))
+        : [];
 
     // Group attachments by messageId
-    const attachmentsByMessage = new Map<string, (typeof attachments.$inferSelect)[]>();
+    const attachmentsByMessage = new Map<
+      string,
+      (typeof attachments.$inferSelect)[]
+    >();
     for (const att of attachmentRows) {
       if (!att.messageId) continue;
       const list = attachmentsByMessage.get(att.messageId) ?? [];

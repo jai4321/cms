@@ -39,7 +39,7 @@ export function useConversation(conversationId: string) {
     setLoading(conversationId, true);
     api
       .get<MessagesResponse>(`/dm/${conversationId}/messages`, {
-        params: { limit: 50 },
+        params: { limit: 10 },
       })
       .then((res) => {
         setInitialMessages(conversationId, res.data.items, res.data.nextCursor, res.data.hasMore);

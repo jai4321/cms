@@ -1,18 +1,16 @@
 'use client';
 
 import type { PresenceStatus } from '@/lib/types';
+import { STATUS_OPTIONS } from '@/lib/types';
 
 interface PresenceDotProps {
   status: PresenceStatus;
   className?: string;
 }
 
-const colorMap: Record<PresenceStatus, string> = {
-  online: 'bg-green-500',
-  away: 'bg-yellow-400',
-  dnd: 'bg-red-500',
-  offline: 'bg-slate-400',
-};
+const colorMap = Object.fromEntries(
+  STATUS_OPTIONS.map((opt) => [opt.value, opt.color]),
+) as Record<PresenceStatus, string>;
 
 export default function PresenceDot({ status, className = '' }: PresenceDotProps) {
   return (

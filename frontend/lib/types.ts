@@ -104,6 +104,13 @@ export interface ReactionSummary {
 
 export type PresenceStatus = 'online' | 'away' | 'offline' | 'dnd';
 
+export const STATUS_OPTIONS: { value: PresenceStatus; label: string; color: string }[] = [
+  { value: 'online', label: 'Online', color: 'bg-green-500' },
+  { value: 'away', label: 'Away', color: 'bg-yellow-400' },
+  { value: 'dnd', label: 'Do not disturb', color: 'bg-red-500' },
+  { value: 'offline', label: 'Appear offline', color: 'bg-slate-400' },
+];
+
 export type NotificationType = 'mention' | 'thread_reply' | 'dm';
 
 export interface Notification {

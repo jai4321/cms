@@ -11,13 +11,7 @@ import api from '@/lib/api';
 import Avatar from '@/components/Avatar';
 import PresenceDot from '@/components/PresenceDot';
 import type { PresenceStatus } from '@/lib/types';
-
-const STATUS_OPTIONS: { value: PresenceStatus; label: string; color: string }[] = [
-  { value: 'online', label: 'Online', color: 'bg-green-500' },
-  { value: 'away', label: 'Away', color: 'bg-yellow-400' },
-  { value: 'dnd', label: 'Do not disturb', color: 'bg-red-500' },
-  { value: 'offline', label: 'Appear offline', color: 'bg-slate-400' },
-];
+import { STATUS_OPTIONS } from '@/lib/types';
 
 export default function SidebarUserFooter() {
   const router = useRouter();
@@ -112,7 +106,6 @@ export default function SidebarUserFooter() {
           {activeWorkspace && (
             <button
               onClick={() => {
-                setOpen(false);
                 router.push('/settings');
               }}
               className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"

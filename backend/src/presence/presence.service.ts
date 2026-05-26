@@ -37,9 +37,10 @@ export class PresenceService implements OnModuleInit, OnModuleDestroy {
     return (val as PresenceStatus | null) ?? 'offline';
   }
 
-  async getStatuses(userIds: string[]): Promise<Record<string, PresenceStatus>> {
+  async getStatuses(
+    userIds: string[],
+  ): Promise<Record<string, PresenceStatus>> {
     if (userIds.length === 0) return {};
-
     const keys = userIds.map((id) => this.key(id));
     const values = await this.redis.mget(...keys);
 

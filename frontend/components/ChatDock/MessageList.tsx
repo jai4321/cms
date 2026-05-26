@@ -46,7 +46,7 @@ export default function MessageList({
   const handleScroll = useCallback(() => {
     const el = containerRef.current;
     if (!el || !hasMore || isLoadingMoreRef.current) return;
-    if (el.scrollTop < 80) onLoadMore();
+    if (el.scrollHeight > el.clientHeight && el.scrollTop < el.clientHeight * 0.2) onLoadMore();
   }, [hasMore, onLoadMore]);
 
   if (isLoading) {

@@ -1,25 +1,28 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Minus, X, Info } from 'lucide-react';
-import { useChatDockStore, type ChatBox } from '@/store/chat-dock.store';
-import { useAuthStore } from '@/store/auth.store';
-import { useWorkspaceStore } from '@/store/workspace.store';
-import { useConversation } from '@/hooks/useConversation';
-import MessageList from './MessageList';
-import MessageInput from './MessageInput';
-import GroupInfoPanel from './GroupInfoPanel';
-import ThreadPanel from './ThreadPanel';
-import type { DmConversation, Message, User } from '@/lib/types';
-import Avatar from '@/components/Avatar';
+import { useState } from "react";
+import { Minus, X, Info } from "lucide-react";
+import { useChatDockStore, type ChatBox } from "@/store/chat-dock.store";
+import { useAuthStore } from "@/store/auth.store";
+import { useWorkspaceStore } from "@/store/workspace.store";
+import { useConversation } from "@/hooks/useConversation";
+import MessageList from "./MessageList";
+import MessageInput from "./MessageInput";
+import GroupInfoPanel from "./GroupInfoPanel";
+import ThreadPanel from "./ThreadPanel";
+import type { DmConversation, Message, User } from "@/lib/types";
+import Avatar from "@/components/Avatar";
 
 export default function ChatFullscreen() {
-  const { openBoxes, fullscreenConversationId, setFullscreen, closeDm } = useChatDockStore();
+  const { openBoxes, fullscreenConversationId, setFullscreen, closeDm } =
+    useChatDockStore();
   const { user } = useAuthStore();
-
   if (!fullscreenConversationId) return null;
-  const box = openBoxes.find((b) => b.conversationId === fullscreenConversationId);
-  if (!box || !user) return null;
+  if (!user) return null;
+  const box = openBoxes.find(
+    (b) => b.conversationId === fullscreenConversationId,
+  );
+  if (!box) return null;
 
   return (
     <ChatFullscreenInner
@@ -60,7 +63,11 @@ function ChatFullscreenInner({
 
   const others = box.participants.filter((p) => p.userId !== user.id);
   const isGroup = others.length >= 2;
-  const label = box.name || (others.length === 0 ? 'You (yourself)' : others.map((p) => p.username).join(', '));
+  const label =
+    box.name ||
+    (others.length === 0
+      ? "You (yourself)"
+      : others.map((p) => p.username).join(", "));
 
   const typingLabel =
     typingUsers.length === 0
@@ -82,7 +89,9 @@ function ChatFullscreenInner({
   const handleConversationUpdate = (updated: Partial<DmConversation>) => {
     updateBox(box.conversationId, {
       ...(updated.name !== undefined ? { name: updated.name } : {}),
-      ...(updated.participants !== undefined ? { participants: updated.participants } : {}),
+      ...(updated.participants !== undefined
+        ? { participants: updated.participants }
+        : {}),
     });
   };
 
@@ -100,25 +109,44 @@ function ChatFullscreenInner({
           <div className="flex shrink-0">
             {box.name ? (
               <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
-                {box.name.split(' ').filter(Boolean).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()}
+                {box.name
+                  .split(" ")
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map((w: string) => w[0])
+                  .join("")
+                  .toUpperCase()}
               </span>
             ) : (
               <div className="flex -space-x-2">
-                {(others.length > 0 ? others : box.participants).slice(0, 4).map((p) => (
-                  <span key={p.userId} className="rounded-full ring-2 ring-white">
-                    <Avatar name={p.username} avatarUrl={p.avatarUrl} size="lg" />
-                  </span>
-                ))}
+                {(others.length > 0 ? others : box.participants)
+                  .slice(0, 4)
+                  .map((p) => (
+                    <span
+                      key={p.userId}
+                      className="rounded-full ring-2 ring-white"
+                    >
+                      <Avatar
+                        name={p.username}
+                        avatarUrl={p.avatarUrl}
+                        size="lg"
+                      />
+                    </span>
+                  ))}
               </div>
             )}
           </div>
 
           <div className="min-w-0 flex-1">
-            <h2 className="truncate text-lg font-semibold text-slate-900">{label}</h2>
+            <h2 className="truncate text-lg font-semibold text-slate-900">
+              {label}
+            </h2>
             {typingLabel ? (
               <p className="text-sm italic text-slate-500">{typingLabel}</p>
             ) : isGroup ? (
-              <p className="text-sm text-slate-500">{box.participants.length} participants</p>
+              <p className="text-sm text-slate-500">
+                {box.participants.length} participants
+              </p>
             ) : null}
           </div>
 
