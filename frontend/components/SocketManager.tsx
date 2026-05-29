@@ -124,6 +124,9 @@ export default function SocketManager() {
 
     // ── On (re)connect: refresh presence for all known participants ───────────
     const onConnect = () => {
+      // Mark the current user as online immediately on connect / reconnect
+      socket.emit('presence:update', { status: 'online' });
+
       const convos = useWorkspaceStore.getState().conversations;
       const userIds = [
         ...new Set(convos.flatMap((c) => c.participants.map((p) => p.userId))),
