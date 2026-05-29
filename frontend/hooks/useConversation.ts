@@ -56,6 +56,15 @@ export function useConversation(conversationId: string) {
     clearSidebarUnread(conversationId);
   }, [conversationId, clearUnread, clearSidebarUnread]);
 
+  // Ensure the socket is in the correct DM room whenever a chat box opens.
+  // joinUserRooms on the server only covers rooms that existed at connect time,
+  // so we must re-join explicitly for new or late-joined conversations.
+  useEffect(() => {
+    if (!accessToken) return;
+    const socket = getSocket(accessToken);
+    socket.emit('dm:join', { conversationId });
+  }, [conversationId, accessToken]);
+
   const loadMore = useCallback(async () => {
     if (!conv?.hasMore || conv?.isLoadingMore) return;
     setLoadingMore(conversationId, true);
@@ -70,14 +79,14 @@ export function useConversation(conversationId: string) {
   }, [conversationId, conv?.hasMore, conv?.isLoadingMore, conv?.nextCursor]);
 
   const sendMessage = useCallback(
-    (content: string, attachmentIds?: string[]) => {
+    (content: string, attachmentIds?: string[], replyToMessageId?: string, replyTo?: Message['replyTo']) => {
       if (!user || !accessToken) return;
       const tempId = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      addOptimistic(conversationId, tempId, user.id, user.username, user.avatarUrl ?? null, content);
+      addOptimistic(conversationId, tempId, user.id, user.username, user.avatarUrl ?? null, content, replyTo);
       const socket = getSocket(accessToken);
       socket.emit(
         'message:send',
-        { conversationId, content, attachmentIds },
+        { conversationId, content, attachmentIds, replyToMessageId },
         (msg: Message) => {
           replaceOptimistic(conversationId, tempId, msg);
         },

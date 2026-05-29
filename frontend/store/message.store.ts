@@ -51,6 +51,7 @@ interface MessageStore {
     senderUsername: string,
     senderAvatarUrl: string | null,
     content: string,
+    replyTo?: Message['replyTo'],
   ) => void;
   replaceOptimistic: (id: string, tempId: string, message: Message) => void;
   addTypingUser: (id: string, user: TypingUser) => void;
@@ -122,7 +123,7 @@ export const useMessageStore = create<MessageStore>()((set, get) => ({
       };
     }),
 
-  addOptimistic: (id, tempId, senderId, senderUsername, senderAvatarUrl, content) =>
+  addOptimistic: (id, tempId, senderId, senderUsername, senderAvatarUrl, content, replyTo) =>
     set((s) => {
       const existing = s.conversations[id] ?? defaultConvState();
       const optimistic: Message = {
@@ -130,6 +131,7 @@ export const useMessageStore = create<MessageStore>()((set, get) => ({
         conversationId: id,
         senderId,
         content,
+        replyTo: replyTo ?? null,
         editedAt: null,
         deletedAt: null,
         createdAt: new Date().toISOString(),

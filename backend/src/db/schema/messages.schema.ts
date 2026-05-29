@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, unique } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, unique, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { users } from './users.schema';
 import { directMessageConversations } from './direct-messages.schema';
 
@@ -11,6 +11,10 @@ export const messages = pgTable('messages', {
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
   content: text('content').notNull(),
+  replyToMessageId: uuid('reply_to_message_id').references(
+    (): AnyPgColumn => messages.id,
+    { onDelete: 'set null' },
+  ),
   editedAt: timestamp('edited_at'),
   deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),

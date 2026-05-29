@@ -1,18 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { SmilePlus, MessageSquareReply, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { SmilePlus, MessageSquareReply, History, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import ReactionPicker from './ReactionPicker';
 
 interface Props {
   isOwn: boolean;
   onReact: (emoji: string) => void;
   onReply: () => void;
+  onHistory?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
 }
 
-export default function MessageHoverToolbar({ isOwn, onReact, onReply, onEdit, onDelete }: Props) {
+export default function MessageHoverToolbar({ isOwn, onReact, onReply, onHistory, onEdit, onDelete }: Props) {
   const [showPicker, setShowPicker] = useState(false);
   const [showMore, setShowMore] = useState(false);
 
@@ -40,14 +41,25 @@ export default function MessageHoverToolbar({ isOwn, onReact, onReply, onEdit, o
         )}
       </div>
 
-      {/* Reply (thread) */}
+      {/* Reply (quote reply) */}
       <button
         onClick={onReply}
         className="flex h-6 w-6 items-center justify-center rounded text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
-        title="Reply in thread"
+        title="Reply"
       >
         <MessageSquareReply className="h-3.5 w-3.5" />
       </button>
+
+      {/* History (view all replies) */}
+      {onHistory && (
+        <button
+          onClick={() => { setShowPicker(false); setShowMore(false); onHistory(); }}
+          className="flex h-6 w-6 items-center justify-center rounded text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+          title="View reply history"
+        >
+          <History className="h-3.5 w-3.5" />
+        </button>
+      )}
 
       {/* More (edit/delete — own messages only) */}
       {isOwn && (

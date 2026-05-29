@@ -71,6 +71,8 @@ export interface Message {
   conversationId: string;
   senderId: string;
   content: string;
+  replyToMessageId?: string | null;
+  replyTo?: { id: string; content: string; sender: MessageSender } | null;
   editedAt: string | null;
   deletedAt: string | null;
   createdAt: string;

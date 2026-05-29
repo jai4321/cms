@@ -64,6 +64,13 @@
       "when": 1779083153594,
       "tag": "0008_safe_tyger_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1780054522003,
+      "tag": "0009_hot_gunslinger",
+      "breakpoints": true
     }
   ]
 }

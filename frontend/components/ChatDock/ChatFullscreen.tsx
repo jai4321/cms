@@ -60,6 +60,7 @@ function ChatFullscreenInner({
 
   const [infoOpen, setInfoOpen] = useState(false);
   const [threadMessage, setThreadMessage] = useState<Message | null>(null);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
 
   const others = box.participants.filter((p) => p.userId !== user.id);
   const isGroup = others.length >= 2;
@@ -188,17 +189,26 @@ function ChatFullscreenInner({
           isLoadingMore={isLoadingMore}
           isLoading={isLoading}
           onLoadMore={loadMore}
-          onReply={setThreadMessage}
+          onReply={setReplyingTo}
+          onHistory={setThreadMessage}
           className="flex-1"
         />
 
         {/* Input bar — pb-16 ensures the fixed chat dock boxes don't cover this area */}
         <div className="shrink-0 border-t border-slate-200 bg-white px-6 pb-16 pt-4">
           <MessageInput
-            onSend={sendMessage}
+            onSend={(content, attachmentIds) => {
+              const rTo = replyingTo
+                ? { id: replyingTo.id, content: replyingTo.content, sender: replyingTo.sender }
+                : undefined;
+              sendMessage(content, attachmentIds, replyingTo?.id, rTo);
+              setReplyingTo(null);
+            }}
             onTyping={emitTyping}
-            placeholder={`Message ${label}…`}
+            placeholder={`Message ${label}\u2026`}
             workspaceId={box.workspaceId}
+            replyingTo={replyingTo}
+            onClearReply={() => setReplyingTo(null)}
           />
         </div>
       </div>

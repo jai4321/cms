@@ -16,6 +16,7 @@ interface Props {
   isLoading: boolean;
   onLoadMore: () => void;
   onReply: (message: Message) => void;
+  onHistory: (message: Message) => void;
   className?: string;
 }
 
@@ -27,6 +28,7 @@ export default function MessageList({
   isLoading,
   onLoadMore,
   onReply,
+  onHistory,
   className,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -82,6 +84,7 @@ export default function MessageList({
             msg={msg}
             currentUser={currentUser}
             onReply={onReply}
+            onHistory={onHistory}
           />
         ))}
       </div>
@@ -96,10 +99,12 @@ function MessageRow({
   msg,
   currentUser,
   onReply,
+  onHistory,
 }: {
   msg: Message;
   currentUser: User;
   onReply: (message: Message) => void;
+  onHistory: (message: Message) => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const { reactions, addReaction, toggleReaction } = useReactions(msg.id, currentUser.id);
@@ -133,6 +138,22 @@ function MessageRow({
               : 'bg-slate-100 text-slate-900'
           }`}
         >
+          {msg.replyTo && (
+            <div
+              className={`mb-1.5 rounded border-l-2 px-2 py-1 text-[11px] ${
+                isOwn
+                  ? 'border-white/40 bg-indigo-500'
+                  : 'border-indigo-400 bg-slate-200'
+              }`}
+            >
+              <p className={`font-semibold ${ isOwn ? 'text-indigo-100' : 'text-indigo-600' }`}>
+                {msg.replyTo.sender.username}
+              </p>
+              <p className={`line-clamp-2 ${ isOwn ? 'text-white/80' : 'text-slate-600' }`}>
+                {msg.replyTo.content}
+              </p>
+            </div>
+          )}
           {renderContent(msg.content, isOwn)}
         </div>
         {/* Attachments */}
@@ -155,6 +176,7 @@ function MessageRow({
           isOwn={isOwn}
           onReact={(emoji) => { void addReaction(emoji); }}
           onReply={() => onReply(msg)}
+          onHistory={() => onHistory(msg)}
         />
       )}
     </div>

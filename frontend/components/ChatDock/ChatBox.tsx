@@ -23,6 +23,7 @@ export default function ChatBox({ box }: Props) {
   const { user } = useAuthStore();
   const getStatus = usePresenceStore((s) => s.getStatus);
   const [threadMessage, setThreadMessage] = useState<Message | null>(null);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
 
   const { messages, isLoading, isLoadingMore, hasMore, typingUsers, sendMessage, loadMore, emitTyping } =
     useConversation(box.conversationId);
@@ -44,6 +45,14 @@ export default function ChatBox({ box }: Props) {
         : `${typingUsers.length} people are typing…`;
 
   if (!user) return null;
+
+  const handleSend = (content: string, attachmentIds?: string[]) => {
+    const rTo = replyingTo
+      ? { id: replyingTo.id, content: replyingTo.content, sender: replyingTo.sender }
+      : undefined;
+    sendMessage(content, attachmentIds, replyingTo?.id, rTo);
+    setReplyingTo(null);
+  };
 
   return (
     <div className="flex rounded-t-xl border border-b-0 border-slate-300 bg-white shadow-2xl">
@@ -115,15 +124,18 @@ export default function ChatBox({ box }: Props) {
               isLoadingMore={isLoadingMore}
               isLoading={isLoading}
               onLoadMore={loadMore}
-              onReply={setThreadMessage}
+              onReply={setReplyingTo}
+              onHistory={setThreadMessage}
               className="h-64"
             />
             <div className="border-t border-slate-200 p-3">
               <MessageInput
-                onSend={sendMessage}
+                onSend={handleSend}
                 onTyping={emitTyping}
-                placeholder={`Message ${label}…`}
+                placeholder={`Message ${label}\u2026`}
                 workspaceId={box.workspaceId}
+                replyingTo={replyingTo}
+                onClearReply={() => setReplyingTo(null)}
               />
             </div>
           </>

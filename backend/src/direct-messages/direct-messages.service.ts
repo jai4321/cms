@@ -343,21 +343,15 @@ export class DirectMessagesService {
     conversationId: string,
     senderId: string,
     dto: SendMessageDto,
-  ): Promise<{
-    id: string;
-    conversationId: string;
-    senderId: string;
-    content: string;
-    editedAt: Date | null;
-    deletedAt: Date | null;
-    createdAt: Date;
-    sender: { id: string; username: string; avatarUrl: string | null };
-    mentionedUserIds: string[];
-    attachments: (typeof attachments.$inferSelect)[];
-  }> {
+  ) {
     const [message] = await this.db
       .insert(messages)
-      .values({ conversationId, senderId, content: dto.content })
+      .values({
+        conversationId,
+        senderId,
+        content: dto.content,
+        replyToMessageId: dto.replyToMessageId ?? null,
+      })
       .returning();
 
     const [sender] = await this.db
@@ -406,11 +400,36 @@ export class DirectMessagesService {
             .where(eq(attachments.messageId, message.id))
         : [];
 
+    // Fetch the quoted (replied-to) message if present
+    let replyTo: {
+      id: string;
+      content: string;
+      sender: { id: string; username: string; avatarUrl: string | null };
+    } | null = null;
+    if (dto.replyToMessageId) {
+      const [quoted] = await this.db
+        .select({
+          id: messages.id,
+          content: messages.content,
+          sender: {
+            id: users.id,
+            username: users.username,
+            avatarUrl: users.avatarUrl,
+          },
+        })
+        .from(messages)
+        .innerJoin(users, eq(messages.senderId, users.id))
+        .where(eq(messages.id, dto.replyToMessageId))
+        .limit(1);
+      replyTo = quoted ?? null;
+    }
+
     return {
       ...message,
       sender,
       mentionedUserIds,
       attachments: linkedAttachments,
+      replyTo,
     };
   }
 
@@ -468,6 +487,7 @@ export class DirectMessagesService {
         id: messages.id,
         conversationId: messages.conversationId,
         content: messages.content,
+        replyToMessageId: messages.replyToMessageId,
         editedAt: messages.editedAt,
         deletedAt: messages.deletedAt,
         createdAt: messages.createdAt,
@@ -514,6 +534,39 @@ export class DirectMessagesService {
       attachments: attachmentsByMessage.get(m.id) ?? [],
     }));
 
-    return { items: itemsWithAttachments, nextCursor, hasMore };
+    // Batch-fetch replyTo messages
+    const replyToIds = items
+      .map((m) => m.replyToMessageId)
+      .filter((id): id is string => !!id);
+
+    const replyToMap = new Map<
+      string,
+      { id: string; content: string; sender: { id: string; username: string; avatarUrl: string | null } }
+    >();
+    if (replyToIds.length > 0) {
+      const quotedRows = await this.db
+        .select({
+          id: messages.id,
+          content: messages.content,
+          sender: {
+            id: users.id,
+            username: users.username,
+            avatarUrl: users.avatarUrl,
+          },
+        })
+        .from(messages)
+        .innerJoin(users, eq(messages.senderId, users.id))
+        .where(inArray(messages.id, replyToIds));
+      for (const row of quotedRows) {
+        replyToMap.set(row.id, row);
+      }
+    }
+
+    const itemsWithAll = itemsWithAttachments.map((m) => ({
+      ...m,
+      replyTo: m.replyToMessageId ? (replyToMap.get(m.replyToMessageId) ?? null) : null,
+    }));
+
+    return { items: itemsWithAll, nextCursor, hasMore };
   }
 }

@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Send, Paperclip, X } from 'lucide-react';
 import api from '@/lib/api';
-import type { Attachment } from '@/lib/types';
+import type { Attachment, Message } from '@/lib/types';
 
 interface MemberHint {
   id: string;
@@ -25,9 +25,11 @@ interface Props {
   placeholder?: string;
   disabled?: boolean;
   workspaceId?: string;
+  replyingTo?: Message | null;
+  onClearReply?: () => void;
 }
 
-export default function MessageInput({ onSend, onTyping, placeholder, disabled, workspaceId }: Props) {
+export default function MessageInput({ onSend, onTyping, placeholder, disabled, workspaceId, replyingTo, onClearReply }: Props) {
   const [value, setValue] = useState('');
   const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -277,6 +279,23 @@ export default function MessageInput({ onSend, onTyping, placeholder, disabled, 
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
+      {/* Reply-to quote preview */}
+      {replyingTo && (
+        <div className="flex items-start gap-2 border-b border-slate-100 px-3 py-2">
+          <div className="min-w-0 flex-1 border-l-2 border-indigo-400 pl-2">
+            <p className="text-[10px] font-semibold text-indigo-600">{replyingTo.sender.username}</p>
+            <p className="line-clamp-1 text-[11px] text-slate-500">{replyingTo.content}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClearReply}
+            className="shrink-0 rounded p-0.5 text-slate-400 transition-colors hover:text-slate-600"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      )}
+
       {/* Staged file chips */}
       {stagedFiles.length > 0 && (
         <div className="flex flex-wrap gap-1.5 px-2 pt-2">

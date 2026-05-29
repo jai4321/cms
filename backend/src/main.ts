@@ -22,7 +22,9 @@ class RedisIoAdapter extends IoAdapter {
   }
 
   createIOServer(port: number, options?: ServerOptions) {
-    const server = super.createIOServer(port, options) as ReturnType<IoAdapter['createIOServer']>;
+    const server = super.createIOServer(port, options) as ReturnType<
+      IoAdapter['createIOServer']
+    >;
     server.adapter(createAdapter(this.pubClient, this.subClient));
     return server;
   }
@@ -42,7 +44,7 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.enableCors({
-    origin: process.env.APP_URL ?? 'http://localhost:3000',
+    origin: ['http://localhost:3000', process.env.FRONTEND_URL].filter(Boolean),
     credentials: true,
   });
 

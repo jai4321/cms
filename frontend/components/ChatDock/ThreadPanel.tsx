@@ -1,12 +1,11 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { Message } from '@/lib/types';
 import { useThread } from '@/hooks/useThread';
 import { useAuthStore } from '@/store/auth.store';
 import Avatar from '@/components/Avatar';
-import MessageInput from './MessageInput';
 
 interface Props {
   parentMessage: Message;
@@ -15,9 +14,8 @@ interface Props {
 
 export default function ThreadPanel({ parentMessage, onClose }: Props) {
   const { user } = useAuthStore();
-  const { replies, isLoading, isSending, postReply } = useThread(parentMessage);
+  const { replies, isLoading } = useThread(parentMessage);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const [replyText, setReplyText] = useState('');
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -29,7 +27,7 @@ export default function ThreadPanel({ parentMessage, onClose }: Props) {
     <div className="flex w-72 shrink-0 flex-col border-l border-slate-200 bg-white">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-        <h3 className="text-sm font-semibold text-slate-800">Thread</h3>
+        <h3 className="text-sm font-semibold text-slate-800">Reply History</h3>
         <button
           onClick={onClose}
           className="rounded p-0.5 text-slate-400 transition-colors hover:text-slate-600"
@@ -39,6 +37,23 @@ export default function ThreadPanel({ parentMessage, onClose }: Props) {
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden">
+        {/* If the parent is itself a reply, show the original message as chain context */}
+        {parentMessage.replyTo && (
+          <div className="border-b border-slate-100 bg-slate-50 px-3 py-2">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+              Replying to
+            </p>
+            <div className="border-l-2 border-indigo-400 pl-2">
+              <p className="text-[11px] font-semibold text-indigo-600">
+                {parentMessage.replyTo.sender.username}
+              </p>
+              <p className="line-clamp-3 text-[11px] text-slate-600">
+                {parentMessage.replyTo.content}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Parent message */}
         <div className="border-b border-slate-100 p-3">
           <div className="flex items-start gap-2">
@@ -108,15 +123,6 @@ export default function ThreadPanel({ parentMessage, onClose }: Props) {
           <div ref={bottomRef} />
         </div>
 
-        {/* Reply input */}
-        <div className="border-t border-slate-200 p-3">
-          <MessageInput
-            onSend={(content) => { void postReply(content); }}
-            onTyping={() => {}}
-            placeholder="Reply…"
-            disabled={isSending}
-          />
-        </div>
       </div>
     </div>
   );

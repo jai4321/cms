@@ -72,34 +72,34 @@ export class MessagesService {
   async getReplies(messageId: string, query: GetRepliesDto) {
     const limit = query.limit ?? 50;
     const conditions = [
-      eq(threadMessages.parentMessageId, messageId),
-      isNull(threadMessages.deletedAt),
+      eq(messages.replyToMessageId, messageId),
+      isNull(messages.deletedAt),
     ];
 
     if (query.before) {
-      conditions.push(lt(threadMessages.createdAt, new Date(query.before)));
+      conditions.push(lt(messages.createdAt, new Date(query.before)));
     }
 
     const rows = await this.db
       .select({
-        id: threadMessages.id,
-        parentMessageId: threadMessages.parentMessageId,
-        content: threadMessages.content,
-        editedAt: threadMessages.editedAt,
-        createdAt: threadMessages.createdAt,
+        id: messages.id,
+        parentMessageId: messages.replyToMessageId,
+        content: messages.content,
+        editedAt: messages.editedAt,
+        createdAt: messages.createdAt,
         sender: {
           id: users.id,
           username: users.username,
           avatarUrl: users.avatarUrl,
         },
       })
-      .from(threadMessages)
-      .innerJoin(users, eq(threadMessages.senderId, users.id))
+      .from(messages)
+      .innerJoin(users, eq(messages.senderId, users.id))
       .where(and(...conditions))
-      .orderBy(desc(threadMessages.createdAt))
+      .orderBy(desc(messages.createdAt))
       .limit(limit);
 
-    return rows.reverse();
+    return rows.reverse().map((r) => ({ ...r, parentMessageId: messageId }));
   }
 
   async getReplyCount(messageId: string): Promise<number> {
