@@ -101,6 +101,18 @@ function ChatFullscreenInner({
     setFullscreen(null);
   };
 
+  const MessageInputHandler = (content: string, attachmentIds?: string[]) => {
+    const rTo = replyingTo
+      ? {
+          id: replyingTo.id,
+          content: replyingTo.content,
+          sender: replyingTo.sender,
+        }
+      : undefined;
+    sendMessage(content, attachmentIds, replyingTo?.id, rTo);
+    setReplyingTo(null);
+  };
+
   return (
     <div className="absolute inset-0 z-10 flex bg-white">
       {/* Main chat area */}
@@ -197,13 +209,7 @@ function ChatFullscreenInner({
         {/* Input bar — pb-16 ensures the fixed chat dock boxes don't cover this area */}
         <div className="shrink-0 border-t border-slate-200 bg-white px-6 pb-16 pt-4">
           <MessageInput
-            onSend={(content, attachmentIds) => {
-              const rTo = replyingTo
-                ? { id: replyingTo.id, content: replyingTo.content, sender: replyingTo.sender }
-                : undefined;
-              sendMessage(content, attachmentIds, replyingTo?.id, rTo);
-              setReplyingTo(null);
-            }}
+            onSend={MessageInputHandler}
             onTyping={emitTyping}
             placeholder={`Message ${label}\u2026`}
             workspaceId={box.workspaceId}

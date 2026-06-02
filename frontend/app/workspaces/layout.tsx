@@ -32,11 +32,13 @@ export default function WorkspacesLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100">
+    {/* Methods define for socket events {connection, presence, send, notification} */}
       <SocketManager />
       {/* Left sidebar — fixed height, inner list scrolls. relative+z-30 creates stacking context above main content so notifications/popups layer on top */}
       <aside className="relative z-30 flex h-full w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
         <WorkspaceSwitcher />
         <div className="mt-2 min-h-0 flex-1 overflow-y-auto">
+          {/* List of Conversation of users */}
           <DirectMessagesList onStartDm={() => setDmModalOpen(true)} />
         </div>
         <SidebarUserFooter />
@@ -44,11 +46,12 @@ export default function WorkspacesLayout({
 
       {/* Main content — relative so ChatFullscreen is scoped here */}
       <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+        {/* FullScreen ChatBox */}
         <ChatFullscreen />
         {children}
       </main>
 
-      {/* Start DM modal */}
+      {/* Start DM modal (List of all User present in a workspace to start conversation or conversation group) */}
       {dmModalOpen && (
         <StartDmModal onClose={() => setDmModalOpen(false)} />
       )}

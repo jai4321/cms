@@ -30,9 +30,7 @@ import type { User } from '../db/schema';
 @UseGuards(JwtAuthGuard, WorkspaceMemberGuard)
 @Controller('workspaces/:workspaceId/dm')
 export class WorkspaceDmsController {
-  constructor(
-    private readonly directMessagesService: DirectMessagesService,
-  ) {}
+  constructor(private readonly directMessagesService: DirectMessagesService) {}
 
   // POST /workspaces/:workspaceId/dm
   @Post()
@@ -47,10 +45,7 @@ export class WorkspaceDmsController {
 
   // GET /workspaces/:workspaceId/dm
   @Get()
-  list(
-    @Param('workspaceId') workspaceId: string,
-    @CurrentUser() user: User,
-  ) {
+  list(@Param('workspaceId') workspaceId: string, @CurrentUser() user: User) {
     return this.directMessagesService.listForUser(workspaceId, user.id);
   }
 }
@@ -60,9 +55,7 @@ export class WorkspaceDmsController {
 @UseGuards(JwtAuthGuard, ParticipantGuard)
 @Controller('dm/:conversationId')
 export class DmsController {
-  constructor(
-    private readonly directMessagesService: DirectMessagesService,
-  ) {}
+  constructor(private readonly directMessagesService: DirectMessagesService) {}
 
   // GET /dm/:conversationId
   @Get()
@@ -77,11 +70,7 @@ export class DmsController {
     @CurrentUser() user: User,
     @Body() dto: RenameGroupDto,
   ) {
-    return this.directMessagesService.renameGroup(
-      conversationId,
-      dto,
-      user.id,
-    );
+    return this.directMessagesService.renameGroup(conversationId, dto, user.id);
   }
 
   // DELETE /dm/:conversationId/leave

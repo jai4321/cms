@@ -460,7 +460,7 @@ export class DirectMessagesService {
   // ─── Paginated message history ────────────────────────────────────────────────
 
   async getMessages(conversationId: string, dto: GetMessagesDto) {
-    const limit = dto.limit ?? 10;
+    const limit = dto.limit ?? 50;
 
     const conditions = [
       eq(messages.conversationId, conversationId),
@@ -541,7 +541,11 @@ export class DirectMessagesService {
 
     const replyToMap = new Map<
       string,
-      { id: string; content: string; sender: { id: string; username: string; avatarUrl: string | null } }
+      {
+        id: string;
+        content: string;
+        sender: { id: string; username: string; avatarUrl: string | null };
+      }
     >();
     if (replyToIds.length > 0) {
       const quotedRows = await this.db
@@ -564,7 +568,9 @@ export class DirectMessagesService {
 
     const itemsWithAll = itemsWithAttachments.map((m) => ({
       ...m,
-      replyTo: m.replyToMessageId ? (replyToMap.get(m.replyToMessageId) ?? null) : null,
+      replyTo: m.replyToMessageId
+        ? (replyToMap.get(m.replyToMessageId) ?? null)
+        : null,
     }));
 
     return { items: itemsWithAll, nextCursor, hasMore };
