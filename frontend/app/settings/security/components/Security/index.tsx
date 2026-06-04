@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
+import { Disable2FADialog } from './Disable2FADialog';
 
 type Step = 'idle' | 'qr' | 'backup';
 
@@ -22,6 +24,8 @@ export default function TwoFASetup() {
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showDisableDialog, setShowDisableDialog] = useState(false);
+  const [disableError, setDisableError] = useState('');
 
   async function startSetup() {
     setLoading(true);
@@ -59,10 +63,9 @@ export default function TwoFASetup() {
     }
   }
 
-  async function disable2FA() {
-    const password = window.prompt('Enter your password to disable 2FA:');
-    if (!password) return;
-    setError('');
+  async function disable2FA(password: string) {
+    setLoading(true);
+    setDisableError('');
     try {
       await api.post('/auth/2fa/disable', { password });
       if (user && accessToken) {
@@ -71,8 +74,11 @@ export default function TwoFASetup() {
       }
       setStep('idle');
       setSetupData(null);
+      setShowDisableDialog(false);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Failed to disable 2FA');
+      setDisableError(err?.response?.data?.message ?? 'Failed to disable 2FA');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -138,17 +144,27 @@ export default function TwoFASetup() {
             {user.twoFactorEnabled ? 'Enabled' : 'Not enabled'}
           </p>
         </div>
-        {user.twoFactorEnabled ? (
-          <Button variant="destructive" size="sm" onClick={disable2FA}>
-            Disable
-          </Button>
-        ) : (
-          <Button size="sm" onClick={startSetup} disabled={loading}>
-            {loading ? 'Loading…' : 'Enable'}
-          </Button>
-        )}
+        <Switch
+          checked={user.twoFactorEnabled}
+          disabled={loading}
+          onCheckedChange={(checked) => {
+            if (checked) {
+              startSetup();
+            } else {
+              setDisableError('');
+              setShowDisableDialog(true);
+            }
+          }}
+        />
       </div>
       {error && <p className="text-destructive text-sm">{error}</p>}
+      <Disable2FADialog
+        open={showDisableDialog}
+        onOpenChange={(open) => { setShowDisableDialog(open); if (!open) setDisableError(''); }}
+        onConfirm={disable2FA}
+        loading={loading}
+        error={disableError}
+      />
     </div>
   );
 }

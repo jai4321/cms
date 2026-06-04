@@ -92,6 +92,7 @@ Services defined in `docker-compose.yml`: `postgres`, `redis` (and `minio` from 
 - **HTTP:** Axios with interceptors — attach access token on requests, auto-refresh on 401 response.
 - **Forms:** react-hook-form + zod for all forms.
 - **Styling:** Tailwind CSS utility classes + shadcn/ui components. No custom CSS files unless unavoidable.
+- **Reuse UI components first** — before building a new component, always check `frontend/components/ui/`. If a matching component exists there, use it. Only create a new one when nothing in that directory fits the need.
 - **No shared helper files at page level** — keep small helpers inside the component that uses them.
 
 ---
