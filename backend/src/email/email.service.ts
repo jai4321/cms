@@ -56,6 +56,19 @@ export class EmailService {
     );
   }
 
+  async sendBackupCodesEmail(email: string, codes: string[]): Promise<void> {
+    const codeList = codes.map((c) => `<li><code>${c}</code></li>`).join('');
+    await this.send(
+      email,
+      'Your 2FA Backup Codes',
+      `Your 2FA backup codes:\n${codes.join('\n')}\nEach code can only be used once. Store them somewhere safe.`,
+      `<p>Two-factor authentication has been enabled on your account.</p>
+<p>Here are your <strong>backup codes</strong>. Each can be used only once if you lose access to your authenticator app:</p>
+<ul>${codeList}</ul>
+<p>Store these somewhere safe. If you lose both your authenticator and these codes, you will be locked out.</p>`,
+    );
+  }
+
   private async send(
     to: string,
     subject: string,

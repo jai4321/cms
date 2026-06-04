@@ -11,6 +11,7 @@ import * as crypto from 'crypto';
 import { UsersService } from '../users/users.service';
 import { User } from '../db/schema';
 import { AuthService } from './auth.service';
+import { EmailService } from '../email/email.service';
 
 const SALT_ROUNDS = 12;
 const BACKUP_CODE_COUNT = 8;
@@ -24,6 +25,7 @@ export class TwoFactorService {
     private readonly usersService: UsersService,
     private readonly authService: AuthService,
     private readonly config: ConfigService,
+    private readonly emailService: EmailService,
   ) {
     const hexKey = config
       .getOrThrow<string>('TWO_FACTOR_ENCRYPTION_KEY')
@@ -71,6 +73,10 @@ export class TwoFactorService {
       twoFactorSecret: encryptedSecret,
       twoFactorEnabled: true,
       twoFactorBackupCodes: hashed,
+    });
+
+    void (async () => {
+      await this.emailService.sendBackupCodesEmail(user.email, plain);
     });
 
     return { backupCodes: plain };
