@@ -89,7 +89,12 @@ export class AuthController {
     if (result.refreshToken) {
       this.setRefreshCookie(res, result.refreshToken);
     }
-    const { refreshToken: _, ...body } = result;
+    const body = {
+      requiresTwoFactor: result.requiresTwoFactor,
+      preAuthToken: result.preAuthToken,
+      accessToken: result.accessToken,
+      user: result.user,
+    };
     return body;
   }
 
@@ -166,7 +171,10 @@ export class AuthController {
     @Body() dto: UseBackupCodeDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.twoFactorService.useBackupCode(preAuthUser.id, dto.code);
+    const result = await this.twoFactorService.useBackupCode(
+      preAuthUser.id,
+      dto.code,
+    );
     this.setRefreshCookie(res, result.refreshToken);
     return { accessToken: result.accessToken };
   }

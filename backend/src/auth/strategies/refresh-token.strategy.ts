@@ -29,7 +29,10 @@ export class RefreshTokenStrategy extends PassportStrategy(
     });
   }
 
-  async validate(req: { cookies?: Record<string, string> }, payload: RefreshPayload) {
+  async validate(
+    req: { cookies?: Record<string, string> },
+    payload: RefreshPayload,
+  ) {
     if (!payload.refresh) throw new UnauthorizedException();
     const user = await this.usersService.findById(payload.sub);
     if (!user || !user.refreshTokenHash || !user.refreshTokenExpiry) {

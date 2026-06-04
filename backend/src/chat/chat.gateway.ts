@@ -189,7 +189,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleSendMessage(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody()
-    data: { conversationId: string; content: string; attachmentIds?: string[]; replyToMessageId?: string },
+    data: {
+      conversationId: string;
+      content: string;
+      attachmentIds?: string[];
+      replyToMessageId?: string;
+    },
   ) {
     if (!data.conversationId || !data.content?.trim()) {
       throw new WsException('Invalid payload');

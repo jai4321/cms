@@ -105,7 +105,7 @@ export class TwoFactorService {
       throw new UnauthorizedException();
     }
 
-    const codes: string[] = user.twoFactorBackupCodes as string[];
+    const codes: string[] = user.twoFactorBackupCodes;
     let matchIndex = -1;
 
     for (let i = 0; i < codes.length; i++) {
