@@ -174,6 +174,30 @@ export class MessagesService {
    * Parse @username tokens from message content.
    * Returns array of user IDs found (that exist in DB).
    */
+  async getMessageById(messageId: string) {
+    const [row] = await this.db
+      .select({
+        id: messages.id,
+        conversationId: messages.conversationId,
+        senderId: messages.senderId,
+        content: messages.content,
+        replyToMessageId: messages.replyToMessageId,
+        editedAt: messages.editedAt,
+        deletedAt: messages.deletedAt,
+        createdAt: messages.createdAt,
+        sender: {
+          id: users.id,
+          username: users.username,
+          avatarUrl: users.avatarUrl,
+        },
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.senderId, users.id))
+      .where(eq(messages.id, messageId))
+      .limit(1);
+    return row ?? null;
+  }
+
   async parseMentions(content: string): Promise<string[]> {
     const pattern = /@([a-zA-Z0-9_]+)/g;
     const usernames = new Set<string>();

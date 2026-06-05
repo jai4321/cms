@@ -3,7 +3,7 @@
 import { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { Message } from '@/lib/types';
-import { useThread } from '@/hooks/useThread';
+import { useThread, type AncestorMessage } from '@/hooks/useThread';
 import { useAuthStore } from '@/store/auth.store';
 import Avatar from '@/components/Avatar';
 
@@ -14,7 +14,7 @@ interface Props {
 
 export default function ThreadPanel({ parentMessage, onClose }: Props) {
   const { user } = useAuthStore();
-  const { replies, isLoading } = useThread(parentMessage);
+  const { ancestors, replies, isLoading } = useThread(parentMessage);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,20 +37,32 @@ export default function ThreadPanel({ parentMessage, onClose }: Props) {
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* If the parent is itself a reply, show the original message as chain context */}
-        {parentMessage.replyTo && (
-          <div className="border-b border-slate-100 bg-slate-50 px-3 py-2">
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-              Replying to
+        {/* Full ancestor chain */}
+        {ancestors.length > 0 && (
+          <div className="border-b border-slate-100 bg-slate-50 px-3 py-2 flex flex-col gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+              Reply chain
             </p>
-            <div className="border-l-2 border-indigo-400 pl-2">
-              <p className="text-[11px] font-semibold text-indigo-600">
-                {parentMessage.replyTo.sender.username}
-              </p>
-              <p className="line-clamp-3 text-[11px] text-slate-600">
-                {parentMessage.replyTo.content}
-              </p>
-            </div>
+            {ancestors.map((ancestor: AncestorMessage, i) => (
+              <div key={ancestor.id} className="flex gap-2 items-start">
+                <div className="flex flex-col items-center">
+                  <div className="h-5 w-5 rounded-full bg-indigo-400 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
+                    {ancestor.sender.username[0].toUpperCase()}
+                  </div>
+                  {i < ancestors.length - 1 && (
+                    <div className="w-px flex-1 bg-slate-300 mt-1" style={{ minHeight: 8 }} />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1 pb-1">
+                  <p className="text-[11px] font-semibold text-indigo-600">
+                    {ancestor.sender.username}
+                  </p>
+                  <p className="text-[11px] text-slate-600 line-clamp-2">
+                    {ancestor.content}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

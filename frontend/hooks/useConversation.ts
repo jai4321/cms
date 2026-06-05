@@ -42,6 +42,7 @@ export function useConversation(conversationId: string) {
         params: { limit: 50 },
       })
       .then((res) => {
+        console.log('messages: ',res.data);
         setInitialMessages(conversationId, res.data.items, res.data.nextCursor, res.data.hasMore);
       })
       .catch(() => {

@@ -2,17 +2,42 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 import { getSocket } from '@/lib/socket';
-import type { ThreadMessage, Reaction, ReactionSummary, Message } from '@/lib/types';
+import type { ThreadMessage, Reaction, ReactionSummary, Message, MessageSender } from '@/lib/types';
+
+export interface AncestorMessage {
+  id: string;
+  content: string;
+  createdAt: string;
+  replyToMessageId?: string | null;
+  sender: MessageSender;
+}
 
 interface ThreadState {
+  ancestors: AncestorMessage[];
   replies: ThreadMessage[];
   isLoading: boolean;
   isSending: boolean;
 }
 
+// Walk up the replyTo chain until replyToMessageId is null
+async function fetchAncestorChain(startMessage: Message): Promise<AncestorMessage[]> {
+  const ancestors: AncestorMessage[] = [];
+  let currentReplyToId = startMessage.replyTo?.id ?? null;
+  const MAX_DEPTH = 20;
+
+  for (let i = 0; i < MAX_DEPTH && currentReplyToId; i++) {
+    const res = await api.get<AncestorMessage>(`/messages/${currentReplyToId}`);
+    ancestors.unshift(res.data); // prepend → oldest first: [A, B] for clicking C
+    currentReplyToId = res.data.replyToMessageId ?? null;
+  }
+
+  return ancestors;
+}
+
 export function useThread(parentMessage: Message | null) {
   const { user } = useAuthStore();
   const [state, setState] = useState<ThreadState>({
+    ancestors: [],
     replies: [],
     isLoading: false,
     isSending: false,
@@ -23,16 +48,19 @@ export function useThread(parentMessage: Message | null) {
   useEffect(() => {
     if (!parentMessage) {
       hasLoaded.current = false;
-      setState({ replies: [], isLoading: false, isSending: false });
+      setState({ ancestors: [], replies: [], isLoading: false, isSending: false });
       return;
     }
     if (hasLoaded.current) return;
     hasLoaded.current = true;
     setState((s) => ({ ...s, isLoading: true }));
-    api
-      .get<ThreadMessage[]>(`/messages/${parentMessage.id}/replies`)
-      .then((res) => {
-        setState({ replies: res.data, isLoading: false, isSending: false });
+
+    Promise.all([
+      fetchAncestorChain(parentMessage),
+      api.get<ThreadMessage[]>(`/messages/${parentMessage.id}/replies`).then((r) => r.data),
+    ])
+      .then(([ancestors, replies]) => {
+        setState({ ancestors, replies, isLoading: false, isSending: false });
       })
       .catch(() => {
         setState((s) => ({ ...s, isLoading: false }));
@@ -58,6 +86,7 @@ export function useThread(parentMessage: Message | null) {
   return { ...state, postReply };
 }
 
+
 // ─── Reactions hook ───────────────────────────────────────────────────────────
 
 export function useReactions(messageId: string, currentUserId: string) {
@@ -66,19 +95,24 @@ export function useReactions(messageId: string, currentUserId: string) {
   const loadReactions = useCallback(async () => {
     try {
       const res = await api.get<Reaction[]>(`/messages/${messageId}/reactions`);
+      console.log("Reaction ",res);
       setReactions(summarise(res.data, currentUserId));
     } catch {
       // silently ignore
     }
   }, [messageId, currentUserId]);
 
+  const isOptimistic = messageId.startsWith('optimistic-');
+
   // Auto-load on mount
   useEffect(() => {
+    if (isOptimistic) return;
     void loadReactions();
-  }, [loadReactions]);
+  }, [loadReactions, isOptimistic]);
 
   // Real-time: reload when any user reacts/un-reacts on this message
   useEffect(() => {
+    if (isOptimistic) return;
     const { accessToken } = useAuthStore.getState();
     if (!accessToken) return;
     const socket = getSocket(accessToken);
@@ -87,7 +121,7 @@ export function useReactions(messageId: string, currentUserId: string) {
     };
     socket.on('reaction:update', handler);
     return () => { socket.off('reaction:update', handler); };
-  }, [messageId, loadReactions]);
+  }, [messageId, loadReactions, isOptimistic]);
 
   const addReaction = useCallback(
     async (emoji: string) => {

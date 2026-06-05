@@ -131,4 +131,14 @@ export class MessagesController {
     await this.messagesService.verifyAccess(messageId, user.id);
     return this.messagesService.getReactions(messageId);
   }
+
+  // GET /messages/:id
+  @Get(':id')
+  async getMessageById(
+    @Param('id') messageId: string,
+    @CurrentUser() user: User,
+  ) {
+    await this.messagesService.verifyAccess(messageId, user.id);
+    return this.messagesService.getMessageById(messageId);
+  }
 }
