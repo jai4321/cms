@@ -89,39 +89,57 @@ export function useThread(parentMessage: Message | null) {
 
 // ─── Reactions hook ───────────────────────────────────────────────────────────
 
-export function useReactions(messageId: string, currentUserId: string) {
-  const [reactions, setReactions] = useState<ReactionSummary[]>([]);
-
-  const loadReactions = useCallback(async () => {
-    try {
-      const res = await api.get<Reaction[]>(`/messages/${messageId}/reactions`);
-      console.log("Reaction ",res);
-      setReactions(summarise(res.data, currentUserId));
-    } catch {
-      // silently ignore
-    }
-  }, [messageId, currentUserId]);
+export function useReactions(messageId: string, currentUserId: string, initialReactions?: Reaction[]) {
+  const [reactions, setReactions] = useState<ReactionSummary[]>(() =>
+    initialReactions ? summarise(initialReactions, currentUserId) : [],
+  );
 
   const isOptimistic = messageId.startsWith('optimistic-');
 
-  // Auto-load on mount
-  useEffect(() => {
-    if (isOptimistic) return;
-    void loadReactions();
-  }, [loadReactions, isOptimistic]);
-
-  // Real-time: reload when any user reacts/un-reacts on this message
+  // Real-time: apply reaction events from other users directly to local state
   useEffect(() => {
     if (isOptimistic) return;
     const { accessToken } = useAuthStore.getState();
     if (!accessToken) return;
     const socket = getSocket(accessToken);
-    const handler = (data: { messageId: string }) => {
-      if (data.messageId === messageId) void loadReactions();
+    const handler = (data: {
+      messageId: string;
+      action: 'add' | 'remove';
+      reaction?: { emoji: string; userId: string };
+      emoji?: string;
+      userId?: string;
+    }) => {
+      if (data.messageId !== messageId) return;
+      const emoji = data.action === 'add' ? data.reaction!.emoji : data.emoji!;
+      const userId = data.action === 'add' ? data.reaction!.userId : data.userId!;
+
+      setReactions((prev) => {
+        if (data.action === 'add') {
+          const existing = prev.find((r) => r.emoji === emoji);
+          // Deduplicate: addReaction() already updated state for currentUser
+          if (existing) {
+            if (existing.userIds.includes(userId)) return prev;
+            return prev.map((r) =>
+              r.emoji === emoji
+                ? { ...r, count: r.count + 1, reactedByMe: r.reactedByMe || userId === currentUserId, userIds: [...r.userIds, userId] }
+                : r,
+            );
+          }
+          return [...prev, { emoji, count: 1, reactedByMe: userId === currentUserId, userIds: [userId] }];
+        } else {
+          return prev
+            .map((r) =>
+              r.emoji === emoji
+                ? { ...r, count: r.count - 1, reactedByMe: r.reactedByMe && userId !== currentUserId, userIds: r.userIds.filter((id) => id !== userId) }
+                : r,
+            )
+            .filter((r) => r.count > 0);
+        }
+      });
     };
     socket.on('reaction:update', handler);
     return () => { socket.off('reaction:update', handler); };
-  }, [messageId, loadReactions, isOptimistic]);
+  }, [messageId, currentUserId, isOptimistic]);
 
   const addReaction = useCallback(
     async (emoji: string) => {
@@ -178,7 +196,7 @@ export function useReactions(messageId: string, currentUserId: string) {
     [addReaction, removeReaction],
   );
 
-  return { reactions, loadReactions, addReaction, removeReaction, toggleReaction };
+  return { reactions, addReaction, removeReaction, toggleReaction };
 }
 
 function summarise(raw: Reaction[], currentUserId: string): ReactionSummary[] {

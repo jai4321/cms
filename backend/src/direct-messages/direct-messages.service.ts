@@ -16,6 +16,7 @@ import {
   messages,
   mentions,
   attachments,
+  reactions,
 } from '../db/schema';
 import {
   CreateDmDto,
@@ -566,11 +567,39 @@ export class DirectMessagesService {
       }
     }
 
+    // Batch-fetch reactions for all messages
+    const reactionRows =
+      messageIds.length > 0
+        ? await this.db
+            .select({
+              id: reactions.id,
+              messageId: reactions.messageId,
+              emoji: reactions.emoji,
+              createdAt: reactions.createdAt,
+              user: {
+                id: users.id,
+                username: users.username,
+                avatarUrl: users.avatarUrl,
+              },
+            })
+            .from(reactions)
+            .innerJoin(users, eq(reactions.userId, users.id))
+            .where(inArray(reactions.messageId, messageIds))
+        : [];
+
+    const reactionsByMessage = new Map<string, typeof reactionRows>();
+    for (const r of reactionRows) {
+      const list = reactionsByMessage.get(r.messageId) ?? [];
+      list.push(r);
+      reactionsByMessage.set(r.messageId, list);
+    }
+
     const itemsWithAll = itemsWithAttachments.map((m) => ({
       ...m,
       replyTo: m.replyToMessageId
         ? (replyToMap.get(m.replyToMessageId) ?? null)
         : null,
+      reactions: reactionsByMessage.get(m.id) ?? [],
     }));
 
     return { items: itemsWithAll, nextCursor, hasMore };

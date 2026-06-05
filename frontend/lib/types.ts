@@ -78,6 +78,7 @@ export interface Message {
   createdAt: string;
   sender: MessageSender;
   attachments?: Attachment[];
+  reactions?: Reaction[];
   _optimistic?: boolean;
 }
 

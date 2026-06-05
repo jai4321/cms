@@ -107,7 +107,7 @@ function MessageRow({
   onHistory: (message: Message) => void;
 }) {
   const [hovered, setHovered] = useState(false);
-  const { reactions, addReaction, toggleReaction } = useReactions(msg.id, currentUser.id);
+  const { reactions, addReaction, toggleReaction } = useReactions(msg.id, currentUser.id, msg.reactions);
   const isOwn = (msg.senderId ?? msg.sender?.id) === currentUser.id;
 
   return (
