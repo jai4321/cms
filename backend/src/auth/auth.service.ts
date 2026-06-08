@@ -181,7 +181,7 @@ export class AuthService {
       { sub: user.id, email: user.email, preAuth: true },
       {
         secret: this.config.getOrThrow('PRE_AUTH_SECRET'),
-        expiresIn: this.config.get('PRE_AUTH_EXPIRES_IN', '15m'),
+        expiresIn: this.config.get('PRE_AUTH_EXPIRES_IN', '5m'),
       },
     );
   }
